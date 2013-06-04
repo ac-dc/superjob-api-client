@@ -41,12 +41,12 @@ try
 <div class="g_layout">
 	<div class="g_layout_wrapper">
 <h1>API Superjob.ru. Примеры</h1>
-<h2>Список компаний: GetClientsList</h2>
+<h2>Список компаний: GetClientList</h2>
 <div class="contacts">Ключевое слово: Газпром; вывод по 5 компаний; 3-я страница поиска.</div>
 <?
 
 
-	$clients = $APIClient->GetClientsList(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
+	$clients = $APIClient->GetClientList(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
 
 	if (!$APIClient->hasError())
 	{
@@ -64,12 +64,12 @@ try
 		echo '</table>';
 	}
 ?>
-<h2>Список вакансий: GetVacanciesList</h2>
+<h2>Список вакансий: GetVacancyList</h2>
 <div class="contacts">Ключевое слово: php; город: Москва; вывод по 5 вакансий; 2-я страница поиска.</div>
 <?
 
 
-	$vacancies = $APIClient->GetVacanciesList(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
+	$vacancies = $APIClient->GetVacancyList(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
 
 	if (!$APIClient->hasError())
 	{
@@ -88,7 +88,7 @@ try
 		echo '</table>';
 	}
 ?>
-<h2 id="oauth">Список вакансий с контактами: GetVacanciesList + OAuth</h2>
+<h2 id="oauth">Список вакансий с контактами: GetVacancyList + OAuth</h2>
 <div class="contacts">Ключевое слово: php; город: Н.Новгород, Новосибирск; вывод по 10 вакансий.</div>
 <p><a href="?contacts=1">Посмотреть</a></p>
 <?
@@ -110,7 +110,7 @@ try
 		
 		$vacancies = 
 		$APIClient->setFormat('json')
-				->GetVacanciesList(
+				->GetVacancyList(
 					array(
 						'keyword' => 'php',
 						'count' => 10, 
