@@ -1,20 +1,22 @@
 <?
 /**
-*	Очень простой пример работы с Superjob.ru API
-*	Рассматривается вывод списков компаний, вакансий,
-*	а так же вывод вакансий с контактами через OAuth
+*	РћС‡РµРЅСЊ РїСЂРѕСЃС‚РѕР№ РїСЂРёРјРµСЂ СЂР°Р±РѕС‚С‹ СЃ Superjob.ru API
+*	Р Р°СЃСЃРјР°С‚СЂРёРІР°РµС‚СЃСЏ РІС‹РІРѕРґ СЃРїРёСЃРєРѕРІ РєРѕРјРїР°РЅРёР№, РІР°РєР°РЅСЃРёР№,
+*	Р° С‚Р°Рє Р¶Рµ РІС‹РІРѕРґ РІР°РєР°РЅСЃРёР№ СЃ РєРѕРЅС‚Р°РєС‚Р°РјРё С‡РµСЂРµР· OAuth
 *
-*	Для простоты используется JSON
+*	Р”Р»СЏ РїСЂРѕСЃС‚РѕС‚С‹ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ JSON
 *
-*	Для того, чтобы работал пример с OAuth, 
-*	поправьте настройки в файле config.php
+*	Р”Р»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ СЂР°Р±РѕС‚Р°Р» РїСЂРёРјРµСЂ СЃ OAuth, 
+*	РїРѕРїСЂР°РІСЊС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё РІ С„Р°Р№Р»Рµ config.php
 **/
 session_start();
+header("Content-type: text/html; charset=utf-8");
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 	<title>API SuperJob.ru Example</title>
+	<meta charset="utf-8">
 	<link rel="stylesheet" href="css/normalize.css">
 	<link rel="stylesheet" href="css/code.css">
 	<link rel="stylesheet" href="css/main.css">
@@ -25,28 +27,26 @@ session_start();
 include_once('class.SuperjobAPIClient.php');
 function process_array($array)
 {
-	if ($array = json_decode($array, true))
+	if ($decoded = json_decode($array, true))
 	{
-		array_walk_recursive($array, function(&$value,$key){
-   			$value=iconv("UTF-8","CP1251",$value);
-		});
+		return $decoded;
 	}
 	return $array;
-
 }
+
 try 
 {
 	$APIClient = SuperjobAPIClient::instance();
 ?>
 <div class="g_layout">
 	<div class="g_layout_wrapper">
-<h1>API Superjob.ru. Примеры</h1>
-<h2>Список компаний: GetClientsList</h2>
-<div class="contacts">Ключевое слово: Газпром; вывод по 5 компаний; 3-я страница поиска.</div>
+<h1>API Superjob.ru. РџСЂРёРјРµСЂС‹</h1>
+<h2>РЎРїРёСЃРѕРє РєРѕРјРїР°РЅРёР№: GetClientsList</h2>
+<div class="contacts">РљР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ: Р“Р°Р·РїСЂРѕРј; РІС‹РІРѕРґ РїРѕ 5 РєРѕРјРїР°РЅРёР№; 3-СЏ СЃС‚СЂР°РЅРёС†Р° РїРѕРёСЃРєР°.</div>
 <?
 
 
-	$clients = $APIClient->GetClientsList(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
+	$clients = $APIClient->GetClientsList(array('keyword' => 'Р“Р°Р·РїСЂРѕРј', 'page' => 2, 'count' => 5));
 
 	if (!$APIClient->hasError())
 	{
@@ -64,8 +64,8 @@ try
 		echo '</table>';
 	}
 ?>
-<h2>Список вакансий: GetVacanciesList</h2>
-<div class="contacts">Ключевое слово: php; город: Москва; вывод по 5 вакансий; 2-я страница поиска.</div>
+<h2>РЎРїРёСЃРѕРє РІР°РєР°РЅСЃРёР№: GetVacanciesList</h2>
+<div class="contacts">РљР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ: php; РіРѕСЂРѕРґ: РњРѕСЃРєРІР°; РІС‹РІРѕРґ РїРѕ 5 РІР°РєР°РЅСЃРёР№; 2-СЏ СЃС‚СЂР°РЅРёС†Р° РїРѕРёСЃРєР°.</div>
 <?
 
 
@@ -88,9 +88,9 @@ try
 		echo '</table>';
 	}
 ?>
-<h2 id="oauth">Список вакансий с контактами: GetVacanciesList + OAuth</h2>
-<div class="contacts">Ключевое слово: php; город: Н.Новгород, Новосибирск; вывод по 10 вакансий.</div>
-<p><a href="?contacts=1">Посмотреть</a></p>
+<h2 id="oauth">РЎРїРёСЃРѕРє РІР°РєР°РЅСЃРёР№ СЃ РєРѕРЅС‚Р°РєС‚Р°РјРё: GetVacanciesList + OAuth</h2>
+<div class="contacts">РљР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ: php; РіРѕСЂРѕРґ: Рќ.РќРѕРІРіРѕСЂРѕРґ, РќРѕРІРѕСЃРёР±РёСЂСЃРє; РІС‹РІРѕРґ РїРѕ 10 РІР°РєР°РЅСЃРёР№.</div>
+<p><a href="?contacts=1">РџРѕСЃРјРѕС‚СЂРµС‚СЊ</a></p>
 <?
 	if (!empty($_REQUEST['contacts']))
 	{
@@ -144,7 +144,7 @@ try
 		else
 		{
 			$vacancies = process_array($vacancies);
-			// Обычные ошибки приходят в массиве, но ошибки OAuth в обычном тексте
+			// РћР±С‹С‡РЅС‹Рµ РѕС€РёР±РєРё РїСЂРёС…РѕРґСЏС‚ РІ РјР°СЃСЃРёРІРµ, РЅРѕ РѕС€РёР±РєРё OAuth РІ РѕР±С‹С‡РЅРѕРј С‚РµРєСЃС‚Рµ
 			$error = (is_array($vacancies)) ? $vacancies['error']['message'] : $vacancies;
 			echo '<p><b>'.$error.'</b></p>';
 		}
