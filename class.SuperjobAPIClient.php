@@ -60,27 +60,27 @@ class SuperjobAPIClient
     }
     
     /**
-     * Call of Superjob API's GetVacanciesList method implementation
+     * Call of Superjob API's GetVacancyList method implementation
      *
      * @param array $data
      * @param OAuthToken $access_token
      * @return string
      */
-    public function GetVacanciesList($data = array(), $access_token = null)
+    public function GetVacancyList($data = array(), $access_token = null)
     {
-    	return $this->_sendGetRequest('GetVacanciesList', $data, $access_token);
+    	return $this->_sendGetRequest('GetVacancyList', $data, $access_token);
     }
     
     
     /**
-     * Call of Superjob API's GetClientsList method implementation
+     * Call of Superjob API's GetClientList method implementation
      *
      * @param array $data
      * @return string
      */
-    public function GetClientsList($data = array())
+    public function GetClientList($data = array())
     {
-    	return $this->_sendGetRequest('GetClientsList', $data);
+    	return $this->_sendGetRequest('GetClientList', $data);
     }
 
     /**
