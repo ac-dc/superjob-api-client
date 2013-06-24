@@ -60,97 +60,133 @@ class SuperjobAPIClient
     }
     
     /**
-     * Call of Superjob API's GetVacancyList method implementation
+     * Call of Superjob API's vacancies method implementation
      *
      * @param array $data
      * @param OAuthToken $access_token
      * @return string
      */
-    public function GetVacancyList($data = array(), $access_token = null)
+    public function vacancies($data = array(), $access_token = null)
     {
-    	return $this->_sendGetRequest('GetVacancyList', $data, $access_token);
+    	return $this->_sendGetRequest('vacancies', $data, $access_token);
     }
-    
-    
-    /**
-     * Call of Superjob API's GetClientList method implementation
-     *
-     * @param array $data
-     * @return string
-     */
-    public function GetClientList($data = array())
-    {
-    	return $this->_sendGetRequest('GetClientList', $data);
-    }
+	
 
     /**
-     * Call of Superjob API's GetTownList method implementation
+     * Call of Superjob API's vacancies/id method implementation
      *
+	 * @param int $id - ID of vacancy
      * @param array $data
+     * @param OAuthToken $access_token
      * @return string
      */
-    public function GetTownList($data = array())
+    public function vacancy($id, $data = array(), $access_token = null)
     {
-    	return $this->_sendGetRequest('GetTownList', $data);
-    }
-    
-    /**
-     * Call of Superjob API's GetCountryList method implementation
-     *
-     * @param array $data
-     * @return string
-     */
-    public function GetCountryList($data = array())
-    {
-    	return $this->_sendGetRequest('GetCountryList', $data);
-    }
+    	return $this->_sendGetRequest('vacancies/'.$id, $data, $access_token);
+    }	
     
     
     /**
-     * Call of Superjob API's GetRegionList method implementation
+     * Call of Superjob API's clients method implementation
      *
      * @param array $data
      * @return string
      */
-    public function GetRegionList($data = array())
+    public function clients($data = array())
     {
-    	return $this->_sendGetRequest('GetRegionList', $data);
+    	return $this->_sendGetRequest('clients', $data);
+    }
+	
+    /**
+     * Call of Superjob API's client/id method implementation
+     *
+	 * @param int $id - ID of client
+     * @param array $data
+     * @return string
+     */
+    public function client($id, $data = array())
+    {
+    	return $this->_sendGetRequest('clients/'.$id, $data);
+    }	
+
+    /**
+     * Call of Superjob API's towns method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function towns($data = array())
+    {
+    	return $this->_sendGetRequest('towns', $data);
+    }
+    
+    /**
+     * Call of Superjob API's countries method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function countries($data = array())
+    {
+    	return $this->_sendGetRequest('countries', $data);
+    }
+    
+    
+    /**
+     * Call of Superjob API's regions method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function regions($data = array())
+    {
+    	return $this->_sendGetRequest('regions', $data);
     }
 
   
     /**
-     * Call of Superjob API's ForgotPassword method implementation
+     * Call of Superjob API's forgot_password method implementation
      *
      * @param array $data
      * @return string
      */
-    public function ForgotPassword($data = array())
+    public function forgot_password($data = array())
     {
-    	return $this->_sendPostRequest('ForgotPassword', $data);
+    	return $this->_sendPostRequest('forgot_password', $data);
     }
     
     /**
-     * Call of Superjob API's SendCVOnVacancy method implementation
+     * Call of Superjob API's send_cv_on_vacancy method implementation
      *
      * @param array $data
      * @param OAuthToken $access_token
      * @return string
      */
-    public function SendCVOnVacancy($data = array(), $access_token)
+    public function send_cv_on_vacancy($data = array(), $access_token)
     {
-    	return $this->_sendPostRequest('SendCVOnVacancy', $data, $access_token);
+    	return $this->_sendPostRequest('send_cv_on_vacancy', $data, $access_token);
     }
 
-
     /**
-     * Call of Superjob API's GetUserCVList method implementation
+     * Call of Superjob API's user/current method implementation
      *
      * @param OAuthToken $access_token
      * @return string
      */
-    public function GetUserCVList($access_token)
+    public function current_user($access_token)
     {
-    	return $this->_sendGetRequest('GetUserCVList', array(), $access_token);
+    	return $this->_sendGetRequest('user/current', array(), $access_token);
+    } 	
+
+    /**
+     * Call of Superjob API's user_cvs method implementation
+     *
+     * @param OAuthToken $access_token
+     * @return string
+     */
+    public function user_cvs($access_token)
+    {
+    	return $this->_sendGetRequest('user_cvs', array(), $access_token);
     }       
     
     
@@ -210,12 +246,12 @@ class SuperjobAPIClient
      */
     protected function _sendGetRequest($name, $data = array(), $access_token = null)
     {
-    	$url = $this->_buildUrl($name.$this->_buildQueryString($data));
+    	$url = $this->_buildUrl($name, $this->_buildQueryString($data));
 
     	$url = ($access_token instanceof OAuthToken) 
     			? $this->_signRequest($url, $access_token) 
     			: $url;
-    			
+
     	return $this->_sendRequest($url, 'GET');
     }
     
@@ -250,14 +286,14 @@ class SuperjobAPIClient
      * @return string
      * @throws SuperjobAPIException
      */
-    protected function _sendRequest($targetURL, $method = 'GET', $data = '')
+    protected function _sendRequest($url, $method = 'GET', $data = '')
     {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        curl_setopt($ch, CURLOPT_URL, $targetURL);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt ($ch, CURLOPT_HEADER, true);
 
@@ -293,11 +329,11 @@ class SuperjobAPIClient
      * @param string $uri
      * @return string
      */
-    protected function _buildUrl($url)
+    protected function _buildUrl($url, $params = '')
     {
     	return (stripos($url, self::API_URI) === false) 
-        				? "https://".self::API_URI.$url 
-        				: $url;
+        				? "https://".self::API_URI.$url.'/'.$params 
+        				: $url.'/'.$params;
     }
     
     /**

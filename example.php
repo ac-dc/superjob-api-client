@@ -11,6 +11,18 @@
 **/
 session_start();
 header("Content-type: text/html; charset=utf-8");
+
+include_once('class.SuperjobAPIClient.php');
+
+function process_array($array)
+{
+	if ($decoded = json_decode($array, true))
+	{
+		return $decoded;
+	}
+	return $array;
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -24,29 +36,19 @@ header("Content-type: text/html; charset=utf-8");
 <body>
 <?php
 
-include_once('class.SuperjobAPIClient.php');
-function process_array($array)
-{
-	if ($decoded = json_decode($array, true))
-	{
-		return $decoded;
-	}
-	return $array;
-}
-
 try 
 {
-	$APIClient = SuperjobAPIClient::instance();
+	$APIClient = new SuperjobAPIClient(); //можно и так: SuperjobAPIClient::instance();
+	
 ?>
 <div class="g_layout">
 	<div class="g_layout_wrapper">
 <h1>API Superjob.ru. Примеры</h1>
-<h2>Список компаний: GetClientList</h2>
+<h2>Список компаний: clients</h2>
 <div class="contacts">Ключевое слово: Газпром; вывод по 5 компаний; 3-я страница поиска.</div>
 <?
 
-
-	$clients = $APIClient->GetClientList(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
+	$clients = $APIClient->clients(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
 
 	if (!$APIClient->hasError())
 	{
@@ -64,12 +66,12 @@ try
 		echo '</table>';
 	}
 ?>
-<h2>Список вакансий: GetVacancyList</h2>
+<h2>Список вакансий: vacancies</h2>
 <div class="contacts">Ключевое слово: php; город: Москва; вывод по 5 вакансий; 2-я страница поиска.</div>
 <?
 
 
-	$vacancies = $APIClient->GetVacancyList(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
+	$vacancies = $APIClient->vacancies(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
 
 	if (!$APIClient->hasError())
 	{
@@ -78,7 +80,6 @@ try
 		echo '<table cellpadding=4 cellspacing=4>';
 		foreach ($vacancies['objects'] as $v)
 		{
-			
 			echo '<tr><td><p>
 				<a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a>
 				</p></td><td>'.
@@ -88,8 +89,9 @@ try
 		echo '</table>';
 	}
 ?>
-<h2 id="oauth">Список вакансий с контактами: GetVacancyList + OAuth</h2>
-<div class="contacts">Ключевое слово: php; город: Н.Новгород, Новосибирск; вывод по 10 вакансий.</div>
+<h2 id="oauth">Список вакансий с контактами: vacancies + OAuth</h2>
+<div class="contacts">Ключевое слово: php; город: Н.Новгород, Новосибирск; вывод по 10 вакансий.
+<br><b>Сессия теряется после перезагрузки страницы</b></div>
 <p><a href="?contacts=1">Посмотреть</a></p>
 <?
 	if (!empty($_REQUEST['contacts']))
@@ -97,6 +99,8 @@ try
 		if (empty($_SESSION['oauth_token']))
 		{
 			$Request = $APIClient->fetchRequestToken();
+			
+			// Запоминаем request токен, чтобы потом получить access токен
 			$_SESSION['oauth_token'] = $Request->key;
 			$_SESSION['oauth_token_secret'] = $Request->secret;
 		
@@ -108,9 +112,12 @@ try
 	{
 		$Access = $APIClient->fetchAccessToken(new OAuthToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']));
 		
+		// Под кем зашёл пользователь?
+		$user = process_array($APIClient->current_user($Access));
+
 		$vacancies = 
 		$APIClient->setFormat('json')
-				->GetVacancyList(
+				->vacancies(
 					array(
 						'keyword' => 'php',
 						'count' => 10, 
@@ -118,15 +125,23 @@ try
 					), 
 					$Access
 				);
+				
 		unset($_SESSION['oauth_token']);
 		unset($_SESSION['oauth_token_secret']);
+		
 		if (!$APIClient->hasError())
 		{
 			$vacancies = process_array($vacancies);
+			
 			echo '<table cellpadding=4 cellspacing=4>';
+			
+			// Информация о текущем пользователе
+			echo '<tr><td><p>Вы вошли как <b>'.$user['name'].'</b></td>';
+			echo '<td>'.((!empty($user['photo']) ? '<img src="'.$user['photo'].'" border=0><br>' : '')).'</td></tr>';
+			
+			
 			foreach ($vacancies['objects'] as $v)
 			{
-			
 				echo '<tr><td>
 					<p><a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a></p>
 					<div class="contacts">'.
@@ -149,10 +164,6 @@ try
 			echo '<p><b>'.$error.'</b></p>';
 		}
 	}
-
-
-
-
 }
 catch (Exception $e)
 {
