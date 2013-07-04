@@ -96,17 +96,14 @@ try
 <?
 	if (!empty($_REQUEST['contacts']))
 	{
-		if (empty($_SESSION['oauth_token']))
-		{
-			$Request = $APIClient->fetchRequestToken();
-			
-			// Запоминаем request токен, чтобы потом получить access токен
-			$_SESSION['oauth_token'] = $Request->key;
-			$_SESSION['oauth_token_secret'] = $Request->secret;
+		$Request = $APIClient->fetchRequestToken();
 		
-			$APIClient->redirectToAuthorizePage($Request, 
-				"http://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}?access=1#oauth");
-		}
+		// Запоминаем request токен, чтобы потом получить access токен
+		$_SESSION['oauth_token'] = $Request->key;
+		$_SESSION['oauth_token_secret'] = $Request->secret;
+	
+		$APIClient->redirectToAuthorizePage($Request, 
+			"http://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}?access=1#oauth");
 	}
 	elseif (!empty($_REQUEST['access']))
 	{
