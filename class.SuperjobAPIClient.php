@@ -1,6 +1,9 @@
 <?php
+// ID app
+define("OA_CONSUMER_KEY", 1); 
+// Secret key
+define("OA_CONSUMER_SECRET", "qocMBQg1P17CBcdVsJizsNPnlGbTU4fvlGxAszmzB5");
 
-include_once('config.php');
 include_once('class.OAuth.php');
 
 class SuperjobAPIClient
