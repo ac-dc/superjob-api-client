@@ -76,7 +76,7 @@ class SuperjobAPIClient
 	
 
     /**
-     * Call of Superjob API's vacancies/id method implementation
+     * Call of Superjob API's vacancies/:id method implementation
      *
 	 * @param int $id - ID of vacancy
      * @param array $data
@@ -101,7 +101,7 @@ class SuperjobAPIClient
     }
 	
     /**
-     * Call of Superjob API's client/id method implementation
+     * Call of Superjob API's client/:id method implementation
      *
 	 * @param int $id - ID of client
      * @param array $data
@@ -145,6 +145,40 @@ class SuperjobAPIClient
     {
     	return $this->_sendGetRequest('regions', $data);
     }
+    
+    /**
+     * Call of Superjob API's catalogues method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function catalogues()
+    {
+    	return $this->_sendGetRequest('catalogues');
+    }
+    
+    /**
+     * Call of Superjob API's catalogues/:id method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function catalogue($id)
+    {
+    	return $this->_sendGetRequest('catalogues/'.(int)$id);
+    }    
+    
+    
+    /**
+     * Call of Superjob API's catalogues/parent/:id method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function cataloguesByParent($id)
+    {
+    	return $this->_sendGetRequest('catalogues/parent/'.(int)$id);
+    }      
 
   
     /**
