@@ -272,6 +272,26 @@ class SuperjobAPIClient
     {
     	return strpos((string)$this->_http_code, '2') !== 0;
     }
+	
+    /**
+     * Sends custom request to API
+     *
+     * @param string $name - API Method
+     * @param array $data - API Method's parameters
+     * @param OAuthToken $access_token
+     * @param string $method Specifies the HTTP method to be used for this request
+     * @return string
+     */
+    public function customQuery($name, $data = array(), $access_token = null, $method = 'GET')
+    {
+    	$url = $this->_buildUrl($name, $this->_buildQueryString($data));
+
+    	$url = ($access_token instanceof OAuthToken) 
+    			? $this->_signRequest($url, $access_token) 
+    			: $url;
+
+    	return $this->_sendRequest($url, $method);
+    }	
     
     /**
      * Sends the GET request to API
