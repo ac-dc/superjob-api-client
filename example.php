@@ -10,7 +10,7 @@
 session_start();
 header("Content-type: text/html; charset=utf-8");
 
-include_once('class.SuperjobAPIClient.php');
+include_once('SuperjobAPIClient.php');
 
 ?>
 <!DOCTYPE html>

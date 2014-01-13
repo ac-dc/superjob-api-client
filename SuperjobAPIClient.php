@@ -4,7 +4,7 @@ define("OA_CONSUMER_KEY", 1);
 // Secret key
 define("OA_CONSUMER_SECRET", "Your secret here");
 
-include_once('class.OAuth.php');
+include_once('OAuth.php');
 
 class SuperjobAPIClient
 {
