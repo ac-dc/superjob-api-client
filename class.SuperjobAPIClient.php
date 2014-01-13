@@ -2,7 +2,7 @@
 // ID app
 define("OA_CONSUMER_KEY", 1); 
 // Secret key
-define("OA_CONSUMER_SECRET", "1ocMSQg1P17CAddVsJazsYPnlGbTU4fvlGxAszmzB8");
+define("OA_CONSUMER_SECRET", "Your secret here");
 
 include_once('class.OAuth.php');
 
