@@ -4,8 +4,6 @@
 *	Рассматривается вывод списков компаний, вакансий,
 *	а так же вывод вакансий с контактами через OAuth
 *
-*	Для простоты используется JSON
-*
 *	Для того, чтобы работал пример с OAuth, 
 *	поправьте настройки в файле config.php
 **/
@@ -13,15 +11,6 @@ session_start();
 header("Content-type: text/html; charset=utf-8");
 
 include_once('class.SuperjobAPIClient.php');
-
-function process_array($array)
-{
-	if ($decoded = json_decode($array, true))
-	{
-		return $decoded;
-	}
-	return $array;
-}
 
 ?>
 <!DOCTYPE html>
@@ -52,8 +41,6 @@ try
 
 	if (!$APIClient->hasError())
 	{
-		$clients = process_array($clients);
-
 		echo '<table cellpadding=4 cellspacing=4>';
 		foreach ($clients['objects'] as $v)
 		{
@@ -75,8 +62,6 @@ try
 
 	if (!$APIClient->hasError())
 	{
-		$vacancies = process_array($vacancies);
-
 		echo '<table cellpadding=4 cellspacing=4>';
 		foreach ($vacancies['objects'] as $v)
 		{
@@ -110,11 +95,9 @@ try
 		$Access = $APIClient->fetchAccessToken(new OAuthToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']));
 		
 		// Под кем зашёл пользователь?
-		$user = process_array($APIClient->current_user($Access));
+		$user = $APIClient->current_user($Access);
 
-		$vacancies = 
-		$APIClient->setFormat('json')
-				->vacancies(
+		$vacancies = $APIClient->vacancies(
 					array(
 						'keyword' => 'php',
 						'count' => 10, 
@@ -128,8 +111,6 @@ try
 		
 		if (!$APIClient->hasError())
 		{
-			$vacancies = process_array($vacancies);
-			
 			echo '<table cellpadding=4 cellspacing=4>';
 			
 			// Информация о текущем пользователе
@@ -155,7 +136,6 @@ try
 		}
 		else
 		{
-			$vacancies = process_array($vacancies);
 			// Обычные ошибки приходят в массиве, но ошибки OAuth в обычном тексте
 			$error = (is_array($vacancies)) ? $vacancies['error']['message'] : $vacancies;
 			echo '<p><b>'.$error.'</b></p>';

@@ -2,7 +2,7 @@
 // ID app
 define("OA_CONSUMER_KEY", 1); 
 // Secret key
-define("OA_CONSUMER_SECRET", "Your secret here");
+define("OA_CONSUMER_SECRET", "1ocMSQg1P17CAddVsJazsYPnlGbTU4fvlGxAszmzB8");
 
 include_once('class.OAuth.php');
 
@@ -19,18 +19,16 @@ class SuperjobAPIClient
      */
     protected $_timeout = 15;
     
-    /**
-     * Format of API's output
-     * Equals to 'json', 'xml' or 'text'
-     *
-     * @var string
-     */
-    protected $_format = false;
-    
+	/**
+	* {@link setObjectOutput()}
+	* @var bool
+	**/
+	protected $_object_output = false;
+	
     /**
      * HTTP Code of the last Curl Request
      *
-     * @var int
+     * @var bool|int
      */
     protected $_http_code = false;
     
@@ -246,21 +244,14 @@ class SuperjobAPIClient
     }
     
     /**
-     * Sets the length of time (in seconds) to wait for a respnse from Superjob before timing out.
+     * Returns all data as an objects
      *
-     * Provides a fluent interface.
      *
-     * @param string $timeout Length of time (in seconds) before timeout
-     *
-     * @return SuperjobAPIClient
+     * @return void
      */
-    public function setFormat($format)
+    public function setObjectOutput()
     {
-        assert(is_string($format));
-
-        $this->_format = (in_array($format, array('json', 'xml', 'text')) ? $format : false);
-
-        return $this;
+        $this->_object_output = true;
     }
     
     /**
@@ -340,10 +331,10 @@ class SuperjobAPIClient
      * @param string  $method Specifies the HTTP method to be used for this request
      * @param mixed   $data   x-www-form-urlencoded data (or array) to be sent in a POST request body
      *
-     * @return string
+     * @return array|null
      * @throws SuperjobAPIException
      */
-    protected function _sendRequest($url, $method = 'GET', $data = '')
+    protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
     {
         $ch = curl_init();
 
@@ -377,7 +368,12 @@ class SuperjobAPIClient
 
         $size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         curl_close($ch);
-	return substr($data, $size);
+		$data = substr($data, $size);
+		if (!empty($data) && ($no_processing === false))
+		{
+			$data = json_decode($data, !$this->_object_output);
+		}
+		return $data;
     }
     
     /**
@@ -443,7 +439,7 @@ class SuperjobAPIClient
 
 		$req->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $consumer, NULL);
 
-		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url()));
+		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url(), 'GET', '', true));
 		return new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
     }
     
@@ -467,7 +463,7 @@ class SuperjobAPIClient
 		);
 		$req->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $consumer, $request_token);
 
-		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url()));
+		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url(), 'GET', '', true));
 		return new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
     }
     
