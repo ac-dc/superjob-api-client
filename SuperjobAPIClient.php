@@ -108,6 +108,17 @@ class SuperjobAPIClient
     public function client($id, $data = array())
     {
     	return $this->_sendGetRequest('clients/'.$id, $data);
+    }
+	
+    /**
+     * Call of Superjob API's institutes method implementation
+     *
+     * @param array $data
+     * @return string
+     */
+    public function institutes($data = array())
+    {
+    	return $this->_sendGetRequest('institutes', $data);
     }	
 
     /**
@@ -273,16 +284,27 @@ class SuperjobAPIClient
      * @param string $method Specifies the HTTP method to be used for this request
      * @return string
      */
-    public function customQuery($name, $data = array(), $access_token = null, $method = 'GET')
+    public function customQuery($name, $data = array(), $access_token = null, $method = 'GET', $no_processing = false)
     {
-    	$url = $this->_buildUrl($name, $this->_buildQueryString($data));
+    	$url = $method === 'GET' ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
 
     	$url = ($access_token instanceof OAuthToken) 
     			? $this->_signRequest($url, $access_token) 
     			: $url;
 
-    	return $this->_sendRequest($url, $method);
-    }	
+    	return $this->_sendRequest($url, $method, $method === 'POST' ? $data : '', $no_processing);
+    }
+    
+    public function parallelResults($data)
+    {
+    	$mas = explode("\n", $data);
+    	foreach ($mas as $k => $v) 
+    	{
+    		$mas[$k] = json_decode($v, !$this->_object_output);
+    	}
+    	
+    	return $mas;
+    }
     
     /**
      * Sends the GET request to API
@@ -348,7 +370,7 @@ class SuperjobAPIClient
         if('POST' == ($method = strtoupper($method)))
         {
             curl_setopt($ch, CURLOPT_POST, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
         else if('GET' != $method)
         {
