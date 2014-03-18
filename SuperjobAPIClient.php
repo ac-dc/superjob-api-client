@@ -1,50 +1,45 @@
 <?php
-// ID app
-define("OA_CONSUMER_KEY", 1); 
-// Secret key
-define("OA_CONSUMER_SECRET", "Your secret here");
-
-include_once('OAuth.php');
 
 class SuperjobAPIClient
 {
-	const API_URI = 'api.superjob.ru/1.0/';
-	const OAUTH_REQUEST_TOKEN_URL = 'https://api.superjob.ru/1.0/oauth/request_token';
-	const OAUTH_ACCESS_TOKEN_URL = 'https://api.superjob.ru/1.0/oauth/access_token';
+	const API_URI = 'api.superjob.ru/2.0/';
+	const OAUTH_URL = 'https://api.superjob.ru/2.0/oauth2/';
+
 	const OAUTH_AUTHORIZE_URL = 'http://www.superjob.ru/authorize';
-    /**
+	
+	/**
      * {@link setTimeout()}
      *
      * @var integer
      */
     protected $_timeout = 15;
-    
-	/**
-	* {@link setObjectOutput()}
-	* @var bool
-	**/
-	protected $_object_output = false;
-	
+
+    /**
+     * {@link setObjectOutput()}
+     * @var bool
+     **/
+    protected $_object_output = false;
+
     /**
      * HTTP Code of the last Curl Request
      *
      * @var bool|int
      */
     protected $_http_code = false;
-    
+
     /**
      * Instance of SuperjobAPIClient
      *
      * @param SuperjobAPIClient $_instance
      */
-	static protected $_instance;
+    static protected $_instance;
 
 
     public function __construct($timeout = 10)
     {
         $this->setTimeout($timeout);
     }
-    
+
     /**
      * Singletone
      *
@@ -52,14 +47,14 @@ class SuperjobAPIClient
      */
     static public function instance()
     {
-    	if (empty(self::$_instance))
-    	{
-    		$class = __CLASS__;
-    		self::$_instance = new $class;
-    	}
-    	return self::$_instance;
+        if (empty(self::$_instance))
+        {
+            $class = __CLASS__;
+            self::$_instance = new $class;
+        }
+        return self::$_instance;
     }
-    
+
     /**
      * Call of Superjob API's vacancies method implementation
      *
@@ -69,24 +64,24 @@ class SuperjobAPIClient
      */
     public function vacancies($data = array(), $access_token = null)
     {
-    	return $this->_sendGetRequest('vacancies', $data, $access_token);
+        return $this->_sendGetRequest('vacancies', $data, $access_token);
     }
-	
+
 
     /**
      * Call of Superjob API's vacancies/:id method implementation
      *
-	 * @param int $id - ID of vacancy
+     * @param int $id - ID of vacancy
      * @param array $data
      * @param OAuthToken $access_token
      * @return string
      */
     public function vacancy($id, $data = array(), $access_token = null)
     {
-    	return $this->_sendGetRequest('vacancies/'.$id, $data, $access_token);
-    }	
-    
-    
+        return $this->_sendGetRequest('vacancies/'.$id, $data, $access_token);
+    }
+
+
     /**
      * Call of Superjob API's clients method implementation
      *
@@ -95,21 +90,21 @@ class SuperjobAPIClient
      */
     public function clients($data = array())
     {
-    	return $this->_sendGetRequest('clients', $data);
+        return $this->_sendGetRequest('clients', $data);
     }
-	
+
     /**
      * Call of Superjob API's client/:id method implementation
      *
-	 * @param int $id - ID of client
+     * @param int $id - ID of client
      * @param array $data
      * @return string
      */
     public function client($id, $data = array())
     {
-    	return $this->_sendGetRequest('clients/'.$id, $data);
+        return $this->_sendGetRequest('clients/'.$id, $data);
     }
-	
+
     /**
      * Call of Superjob API's institutes method implementation
      *
@@ -118,8 +113,8 @@ class SuperjobAPIClient
      */
     public function institutes($data = array())
     {
-    	return $this->_sendGetRequest('institutes', $data);
-    }	
+        return $this->_sendGetRequest('institutes', $data);
+    }
 
     /**
      * Call of Superjob API's towns method implementation
@@ -129,9 +124,9 @@ class SuperjobAPIClient
      */
     public function towns($data = array())
     {
-    	return $this->_sendGetRequest('towns', $data);
+        return $this->_sendGetRequest('towns', $data);
     }
-    
+
     /**
      * Call of Superjob API's countries method implementation
      *
@@ -140,10 +135,10 @@ class SuperjobAPIClient
      */
     public function countries($data = array())
     {
-    	return $this->_sendGetRequest('countries', $data);
+        return $this->_sendGetRequest('countries', $data);
     }
-    
-    
+
+
     /**
      * Call of Superjob API's regions method implementation
      *
@@ -152,9 +147,9 @@ class SuperjobAPIClient
      */
     public function regions($data = array())
     {
-    	return $this->_sendGetRequest('regions', $data);
+        return $this->_sendGetRequest('regions', $data);
     }
-    
+
     /**
      * Call of Superjob API's catalogues method implementation
      *
@@ -163,9 +158,9 @@ class SuperjobAPIClient
      */
     public function catalogues()
     {
-    	return $this->_sendGetRequest('catalogues');
+        return $this->_sendGetRequest('catalogues');
     }
-    
+
     /**
      * Call of Superjob API's catalogues/:id method implementation
      *
@@ -174,10 +169,10 @@ class SuperjobAPIClient
      */
     public function catalogue($id)
     {
-    	return $this->_sendGetRequest('catalogues/'.(int)$id);
-    }    
-    
-    
+        return $this->_sendGetRequest('catalogues/'.(int)$id);
+    }
+
+
     /**
      * Call of Superjob API's catalogues/parent/:id method implementation
      *
@@ -186,10 +181,10 @@ class SuperjobAPIClient
      */
     public function cataloguesByParent($id)
     {
-    	return $this->_sendGetRequest('catalogues/parent/'.(int)$id);
-    }      
+        return $this->_sendGetRequest('catalogues/parent/'.(int)$id);
+    }
 
-  
+
     /**
      * Call of Superjob API's forgot_password method implementation
      *
@@ -198,9 +193,9 @@ class SuperjobAPIClient
      */
     public function forgot_password($data = array())
     {
-    	return $this->_sendPostRequest('forgot_password', $data);
+        return $this->_sendPostRequest('forgot_password', $data);
     }
-    
+
     /**
      * Call of Superjob API's send_cv_on_vacancy method implementation
      *
@@ -210,7 +205,7 @@ class SuperjobAPIClient
      */
     public function send_cv_on_vacancy($data = array(), $access_token)
     {
-    	return $this->_sendPostRequest('send_cv_on_vacancy', $data, $access_token);
+        return $this->_sendPostRequest('send_cv_on_vacancy', $data, $access_token);
     }
 
     /**
@@ -221,8 +216,8 @@ class SuperjobAPIClient
      */
     public function current_user($access_token)
     {
-    	return $this->_sendGetRequest('user/current', array(), $access_token);
-    } 	
+        return $this->_sendGetRequest('user/current', array(), $access_token);
+    }
 
     /**
      * Call of Superjob API's user_cvs method implementation
@@ -232,10 +227,10 @@ class SuperjobAPIClient
      */
     public function user_cvs($access_token)
     {
-    	return $this->_sendGetRequest('user_cvs', array(), $access_token);
-    }       
-    
-    
+        return $this->_sendGetRequest('user_cvs', array(), $access_token);
+    }
+
+
     /**
      * Sets the length of time (in seconds) to wait for a respnse from Superjob before timing out.
      *
@@ -253,7 +248,7 @@ class SuperjobAPIClient
 
         return $this;
     }
-    
+
     /**
      * Returns all data as an objects
      *
@@ -264,7 +259,7 @@ class SuperjobAPIClient
     {
         $this->_object_output = true;
     }
-    
+
     /**
      * Tells was the last request successfull or not
      *
@@ -272,9 +267,9 @@ class SuperjobAPIClient
      */
     public function hasError()
     {
-    	return strpos((string)$this->_http_code, '2') !== 0;
+        return strpos((string)$this->_http_code, '2') !== 0;
     }
-	
+
     /**
      * Sends custom request to API
      *
@@ -286,26 +281,26 @@ class SuperjobAPIClient
      */
     public function customQuery($name, $data = array(), $access_token = null, $method = 'GET', $no_processing = false)
     {
-    	$url = $method === 'GET' ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
+        $url = $method === 'GET' ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
 
-    	$url = ($access_token instanceof OAuthToken) 
-    			? $this->_signRequest($url, $access_token) 
-    			: $url;
+        $url = (!empty($access_token))
+            ? $this->_signRequest($url, $access_token)
+            : $url;
 
-    	return $this->_sendRequest($url, $method, $method === 'POST' ? $data : '', $no_processing);
+        return $this->_sendRequest($url, $method, $method === 'POST' ? $data : '', $no_processing);
     }
-    
+
     public function parallelResults($data)
     {
-    	$mas = explode("\n", $data);
-    	foreach ($mas as $k => $v) 
-    	{
-    		$mas[$k] = json_decode($v, !$this->_object_output);
-    	}
-    	
-    	return $mas;
+        $mas = explode("\n", $data);
+        foreach ($mas as $k => $v)
+        {
+            $mas[$k] = json_decode($v, !$this->_object_output);
+        }
+
+        return $mas;
     }
-    
+
     /**
      * Sends the GET request to API
      *
@@ -316,15 +311,15 @@ class SuperjobAPIClient
      */
     protected function _sendGetRequest($name, $data = array(), $access_token = null)
     {
-    	$url = $this->_buildUrl($name, $this->_buildQueryString($data));
+        $url = $this->_buildUrl($name, $this->_buildQueryString($data));
 
-    	$url = ($access_token instanceof OAuthToken) 
-    			? $this->_signRequest($url, $access_token) 
-    			: $url;
+        $url = (!empty($access_token))
+            ? $this->_signRequest($url, $access_token)
+            : $url;
 
-    	return $this->_sendRequest($url, 'GET');
+        return $this->_sendRequest($url, 'GET');
     }
-    
+
 
     /**
      * Sends the POST request to API
@@ -336,16 +331,16 @@ class SuperjobAPIClient
      */
     protected function _sendPostRequest($name, $data = array(), $access_token = null)
     {
-    	$url = $this->_buildUrl($name);
+        $url = $this->_buildUrl($name);
 
-    	$url = ($access_token instanceof OAuthToken) 
-    			? $this->_signRequest($url, $access_token) 
-    			: $url;
-    			
-    	return $this->_sendRequest($url, 'POST', $data);
-    }    
-    
-    
+        $url = (!empty($access_token))
+            ? $this->_signRequest($url, $access_token)
+            : $url;
+
+        return $this->_sendRequest($url, 'POST', $data);
+    }
+
+
     /**
      * Sends an HTTP request to Superjob API
      *
@@ -365,7 +360,7 @@ class SuperjobAPIClient
 
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt ($ch, CURLOPT_HEADER, true);
+        curl_setopt ($ch, CURLOPT_HEADER, true);
 
         if('POST' == ($method = strtoupper($method)))
         {
@@ -382,22 +377,22 @@ class SuperjobAPIClient
 
         $data = curl_exec($ch);
         $this->_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
+
         if ($data === false)
         {
-        	$this->_throwException(curl_error($ch));
+            $this->_throwException(curl_error($ch));
         }
 
         $size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         curl_close($ch);
-		$data = substr($data, $size);
-		if (!empty($data) && ($no_processing === false))
-		{
-			$data = json_decode($data, !$this->_object_output);
-		}
-		return $data;
+        $data = substr($data, $size);
+        if (!empty($data) && ($no_processing === false))
+        {
+            $data = json_decode($data, !$this->_object_output);
+        }
+        return $data;
     }
-    
+
     /**
      * Makes an URL
      *
@@ -406,31 +401,30 @@ class SuperjobAPIClient
      */
     protected function _buildUrl($url, $params = '')
     {
-    	return (stripos($url, self::API_URI) === false) 
-        				? "https://".self::API_URI.$url.'/'.$params 
-        				: $url.'/'.$params;
+        return (stripos($url, self::API_URI) === false)
+            ? "https://".self::API_URI.$url.'/'.$params
+            : $url.'/'.$params;
     }
-    
+
     /**
      * Builds a query string from an array of parameters and values.
      *
      * @param array $args    Parameter/value pairs to be evaluated for this query string
-     * @param array $allowed Optional array of allowed parameter keys
      *
      * @return string
      * @throws SuperjobAPIException
      */
-    protected function _buildQueryString(array $args, array $allowed =array())
+    protected function _buildQueryString(array $args)
     {
         // Set Custom Output Format
         if (!empty($this->_format) && !isset($args['type']))
         {
-        	$args['type'] = $this->_format;
+            $args['type'] = $this->_format;
         }
 
         return count($args) ? '?' . http_build_query($args) : '';
     }
-    
+
     /**
      * Throws an SuperjobAPIException
      *
@@ -442,84 +436,67 @@ class SuperjobAPIClient
     {
         throw new SuperjobAPIException($message);
     }
-    
+
     /**
-     * Allows a Consumer application to obtain an OAuth Request Token to request user authorization.
+     * Refreshes the Access Token
      *
-     * @return OAuthToken
-     * @throws OAuthException
-     */
-    public function fetchRequestToken()
-    {
-		$consumer = new OAuthConsumer(OA_CONSUMER_KEY, OA_CONSUMER_SECRET);
-		$req = OAuthRequest::from_consumer_and_token(
-			$consumer, 
-			NULL, 
-			"GET", 
-			self::OAUTH_REQUEST_TOKEN_URL
-		);
-
-		$req->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $consumer, NULL);
-
-		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url(), 'GET', '', true));
-		return new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
-    }
-    
-    /**
-     * Allows a Consumer application to exchange the OAuth Request Token for an OAuth Access Token.
+     * @param string $refresh_token
+     * @param string $client_id		- app's id
+     * @param string $client_secret - apps's secret key
      *
-     * @param OAuthToken $request_token
-     * 
-     * @return OAuthToken
-     * @throws OAuthException
+     * @return array
      */
-    public function fetchAccessToken($request_token, $data = array())
+    public function refreshAccessToken($refresh_token, $client_id, $client_secret)
     {
-		$consumer = new OAuthConsumer(OA_CONSUMER_KEY, OA_CONSUMER_SECRET);
-		$req = OAuthRequest::from_consumer_and_token(
-			$consumer, 
-			$request_token, 
-			"GET", 
-			self::OAUTH_ACCESS_TOKEN_URL,
-			$data
-		);
-		$req->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $consumer, $request_token);
+        $data = compact('refresh_token', 'client_id', 'client_secret');
 
-		$parsed = OAuthUtil::parse_parameters($this->_sendRequest($req->to_url(), 'GET', '', true));
-		return new OAuthToken($parsed['oauth_token'], $parsed['oauth_token_secret']);
+        return $this->_sendGetRequest(self::OAUTH_URL.'access_token' , $data);
     }
-    
+
     /**
-     * Makes a redirect to authorize page
+     * Acquires the Access Token
      *
-     * @param OAuth $request_token
-     * @param string $callback
+     * @param string $code			- code GET-paramenter
+     * @param string $redirect_uri
+     * @param string $client_id		- app's id
+     * @param string $client_secret - apps's secret key
+     *
+     * @return array
      */
-    public function redirectToAuthorizePage($request_token, $callback = null)
+    public function fetchAccessToken($code, $redirect_uri, $client_id, $client_secret)
     {
-		$auth_url = self::OAUTH_AUTHORIZE_URL.'?'.'&oauth_token='.$request_token->key
-			.($callback ? '&oauth_callback='.urlencode($callback) : '');
+        $data = compact('code', 'redirect_uri', 'client_id', 'client_secret');
 
-		header('Location: '.$auth_url);
-		exit();
+        return $this->_sendGetRequest(self::OAUTH_URL.'access_token' , $data);
     }
-    
+
     /**
-     * Signs the request for OAuth
+     * Makes a redirect to the authorize page
+     *
+     * @param int $client_id
+     * @param string $return_uri
+     */
+    public function redirectToAuthorizePage($client_id, $return_uri)
+    {
+        $auth_url = self::OAUTH_AUTHORIZE_URL.'?client_id='.$client_id.'&return_uri='.urlencode($return_uri);
+
+        header('Location: '.$auth_url);
+        exit;
+    }
+
+    /**
+     * Signs the request
      *
      * @param string $url
-     * @param OAuthToken $access_token
+     * @param string $access_token
      * @return string
      */
     protected function _signRequest($url, $access_token)
     {
-    	$consumer = new OAuthConsumer(OA_CONSUMER_KEY, OA_CONSUMER_SECRET);
-		$req = OAuthRequest::from_consumer_and_token(
-				$consumer, $access_token, 
-				'GET', $url
-			);
-		$req->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $consumer, $access_token);
-		return $req->to_url();
+        $parsed = parse_url($url);
+        $sign = empty($parsed['query']) ? '?' : '&';
+
+        return $url.$sign.'access_token='.$access_token;
     }
 }
 
