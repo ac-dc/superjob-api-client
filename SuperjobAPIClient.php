@@ -2,10 +2,10 @@
 
 class SuperjobAPIClient
 {
-	const API_URI = 'api.superjob.ru/2.0/';
-	const OAUTH_URL = 'https://api.superjob.ru/2.0/oauth2/';
+    const API_URI = 'api.superjob.ru/2.0/';
+    const OAUTH_URL = 'https://api.superjob.ru/2.0/oauth2/';
 
-	const OAUTH_AUTHORIZE_URL = 'http://www.superjob.ru/authorize';
+    const OAUTH_AUTHORIZE_URL = 'http://www.superjob.ru/authorize';
 	
 	/**
      * {@link setTimeout()}
@@ -27,6 +27,13 @@ class SuperjobAPIClient
      */
     protected $_http_code = false;
 
+    /**
+     * HTTP Stored data of the last Curl Request
+     *
+     * @var mixed
+     */
+    protected $_data;	
+	
     /**
      * Instance of SuperjobAPIClient
      *
@@ -269,6 +276,24 @@ class SuperjobAPIClient
     {
         return strpos((string)$this->_http_code, '2') !== 0;
     }
+	
+    /**
+     * Tells was the last request successfull or not
+     *
+     * @return bool
+     */
+    public function lastError()
+    {
+		if ($this->_object_output)
+		{
+			 return (!empty($this->_data) && !empty($this->_data->error->message)) 
+					? $this->_data->error->message 
+					: false;
+		}
+        return (!empty($this->_data) && !empty($this->_data['error']['message'])) 
+					? $this->_data['error']['message'] 
+					: false;
+    }	
 
     /**
      * Sends custom request to API
@@ -372,7 +397,6 @@ class SuperjobAPIClient
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         }
 
-        //curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, TRUE);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
 
         $data = curl_exec($ch);
@@ -389,6 +413,12 @@ class SuperjobAPIClient
         if (!empty($data) && ($no_processing === false))
         {
             $data = json_decode($data, !$this->_object_output);
+			$this->_data = $data;
+			// If it is an error - let's there be an exception
+			if ($error = $this->lastError())
+			{
+				$this->_throwException($error);
+			}			
         }
         return $data;
     }
@@ -478,7 +508,7 @@ class SuperjobAPIClient
      */
     public function redirectToAuthorizePage($client_id, $return_uri)
     {
-        $auth_url = self::OAUTH_AUTHORIZE_URL.'?client_id='.$client_id.'&return_uri='.urlencode($return_uri);
+        $auth_url = self::OAUTH_AUTHORIZE_URL.'?client_id='.$client_id.'&redirect_uri='.urlencode($return_uri);
 
         header('Location: '.$auth_url);
         exit;
