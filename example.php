@@ -50,7 +50,7 @@ try
 }
 catch (SuperjobAPIException $e)
 {
-	echo $e->getMessage();
+	$error = $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -100,6 +100,12 @@ catch (SuperjobAPIException $e)
 <p><a href="?contacts=1">Посмотреть</a></p>
 
 <?
+	
+if (!empty($error))
+{
+	echo '<br><p><span style="color: #f00; font-weight: bold;">Ошибка: '.$error.'</span></p>';
+
+}	
 	
 if (!empty($user))
 {
