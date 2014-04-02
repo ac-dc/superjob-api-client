@@ -10,7 +10,7 @@
 
 header("Content-type: text/html; charset=utf-8");
 
-include_once('SuperjobAPIClient.php');
+include_once('SuperjobAPI.php');
 // ID app
 define("OA_CONSUMER_KEY", 1); 
 // Secret key
@@ -19,7 +19,7 @@ define("OA_CONSUMER_SECRET", "Your secret here");
 
 try 
 {
-	$API = new SuperjobAPIClient(); //можно и так: SuperjobAPIClient::instance();
+	$API = new SuperjobAPI(); //можно и так: SuperjobAPI::instance();
 	$clients = $API->clients(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
 	$vacancies = $API->vacancies(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
 	
