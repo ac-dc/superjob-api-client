@@ -5,16 +5,16 @@
 *	а так же вывод вакансий с контактами через OAuth
 *
 *	Для того, чтобы работал пример с OAuth, 
-*	поправьте константы OA_CONSUMER_KEY и OA_CONSUMER_SECRET
+*	поправьте константы CLIENT_ID и CLIENT_SECRET
 **/
 
 header("Content-type: text/html; charset=utf-8");
 
 include_once('SuperjobAPI.php');
 // ID app
-define("OA_CONSUMER_KEY", 1); 
+define("CLIENT_ID", 1); 
 // Secret key
-define("OA_CONSUMER_SECRET", "Your secret here");
+define("CLIENT_SECRET", "Your secret here");
 
 
 try 
@@ -27,12 +27,12 @@ try
 	
 	if (!empty($_REQUEST['contacts']))
 	{
-		$API->redirectToAuthorizePage(OA_CONSUMER_KEY,
+		$API->redirectToAuthorizePage(CLIENT_ID,
 			$redirect_uri);
 	}
 	elseif (!empty($_REQUEST['access']))
 	{
-		$token_info = $API->fetchAccessToken($_REQUEST['code'], $redirect_uri, OA_CONSUMER_KEY, OA_CONSUMER_SECRET);
+		$token_info = $API->fetchAccessToken($_REQUEST['code'], $redirect_uri, CLIENT_ID, CLIENT_SECRET);
 
 		$access_token = $token_info['access_token'];
 		// Под кем зашёл пользователь?
