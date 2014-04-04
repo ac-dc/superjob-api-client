@@ -13,7 +13,7 @@ include_once(dirname(__FILE__).'/../SuperjobAPI.php');
 // ID app
 define("CLIENT_ID", 1); 
 // Secret key
-define("CLIENT_SECRET", "Your secret here");
+define("CLIENT_SECRET", "secret_code_here");
 
 try 
 {
@@ -60,7 +60,8 @@ try
 					$access_token
 				);
 
-		// Выполняем предыдущие 3 запроса параллельно		
+		// Выполняем предыдущие 3 запроса параллельно	
+		
 		list($resumes, $vacancies, $resumes_with_contacts) = $API->executeParallel();
 		
 		$API->setParallelMode();
@@ -161,7 +162,8 @@ if (!empty($user) && !empty($user['hr']))
 <table cellpadding=4 cellspacing=4>
 <h2 id="oauth">Список резюме с контактами: /resumes + OAuth</h2>
 <div class="contacts">Город: Санкт-Петербург; ключевое слово: хирург; вывод по 5 резюме.</div>
-<?	
+<?
+
 	foreach ($resumes_with_contacts['objects'] as $v)
 	{
 		echo '<tr><td>
@@ -179,21 +181,28 @@ if (!empty($user) && !empty($user['hr']))
 	echo '</table>';
 }
 
+
+
+	if (!empty($resumes))
+	{
 ?>
 <h2>Поиск резюме без контактов</h2>
 <div class="contacts">Ключевое слово: менеджер; пол: женский; вывод по 5 резюме; 3-я страница поиска.</div>
 <table cellpadding=4 cellspacing=4>
-<?
-	foreach ($resumes['objects'] as $v)
-	{
-		echo '<tr><td><p class="cutted">
-			<a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a>
-			</p></td><td>'.
-			((!empty($v['photo'])) ? '<img src="'.$v['photo'].'" border=0><br>' : '').
-			'</td></tr>';
+<?	
+		foreach ($resumes['objects'] as $v)
+		{
+			echo '<tr><td><p class="cutted">
+				<a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a>
+				</p></td><td>'.
+				((!empty($v['photo'])) ? '<img src="'.$v['photo'].'" border=0><br>' : '').
+				'</td></tr>';
+		}
+		echo '</table>';		
 	}
+
 ?>
-</table>
+
 <div class="bottom"></div>
 </div>
 </div>

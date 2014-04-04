@@ -146,12 +146,12 @@ class SuperjobAPI
      * Call of Superjob API's user/current method implementation
      *
      * @param string $access_token
-     * @param string $api_key - Secret key of your app. Used for employer's API
+     * @param string $app_key - Secret key of your app. Used for employer's API
      * @return array
      */
-    public function current_user($access_token, $api_key = null)
+    public function current_user($access_token, $app_key = null)
     {
-        return $this->_sendGetRequest(($api_key ? $api_key.'/' : '').'user/current', array(), $access_token);
+        return $this->_sendGetRequest(($app_key ? rawurlencode($app_key).'/' : '').'user/current', array(), $access_token);
     }
 
     /**
@@ -208,7 +208,7 @@ class SuperjobAPI
      */
     public function received_resumes($app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes/received/', $params, $access_token, 'GET');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/received/', $params, $access_token, 'GET');
     }
 
     /**
@@ -222,7 +222,7 @@ class SuperjobAPI
      */
     public function received_resumes_on_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes/received/'.$id, $params, $access_token, 'GET');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/received/'.$id, $params, $access_token, 'GET');
     }
 
     /**
@@ -236,7 +236,7 @@ class SuperjobAPI
      */
     public function resume($id, $app_key, $params = array(), $access_token = null)
     {
-        return $this->customQuery($app_key.'/resumes/'.$id, $params, $access_token,'GET');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token,'GET');
     }
 
     /**
@@ -249,7 +249,7 @@ class SuperjobAPI
      */
     public function resumes($app_key, $params = array(), $access_token = null)
     {
-        return $this->customQuery($app_key.'/resumes', $params, $access_token, 'GET');
+        return $this->customQuery(rawurlencode($app_key).'/resumes', $params, $access_token, 'GET');
     }
 
     /**
@@ -262,7 +262,7 @@ class SuperjobAPI
      */
     public function create_resume($app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes', $params, $access_token, 'POST');
+        return $this->customQuery(rawurlencode($app_key).'/resumes', $params, $access_token, 'POST');
     }
 
 
@@ -277,7 +277,7 @@ class SuperjobAPI
      */
     public function update_resume($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes/'.$id.'/', $params, $access_token, 'PUT');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', $params, $access_token, 'PUT');
     }
 
 
@@ -291,7 +291,7 @@ class SuperjobAPI
      */
     public function delete_resume($id, $app_key, $access_token)
     {
-        $this->customQuery($app_key.'/resumes/'.$id.'/', array(), $access_token, 'DELETE');
+        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', array(), $access_token, 'DELETE');
     }
 
     /**
@@ -321,14 +321,14 @@ class SuperjobAPI
     /**
      * Call of Superjob API's user/list method implementation
      *
-     * @param string $api_key - Secret key of your app. Used for employer's API
+     * @param string $app_key - Secret key of your app. Used for employer's API
      * @param string $access_token
 
      * @return array
      */
-    public function user_list($api_key, $access_token)
+    public function user_list($app_key, $access_token)
     {
-        return $this->_sendGetRequest($api_key.'/user/list', array(), $access_token);
+        return $this->_sendGetRequest(rawurlencode($app_key).'/user/list', array(), $access_token);
     }
 
     /**
@@ -457,12 +457,28 @@ class SuperjobAPI
         return $this->_sendRequest($url, $method, $method === 'POST' ? $data : '', $no_processing);
     }
 
+	/**
+	*	Parse received parallel data
+	*	@param array $data - received data from /parallel method
+	**/
     public function parallelResults($data)
     {
         $mas = explode("\n", $data);
         foreach ($mas as $k => $v)
         {
-            $mas[$k] = json_decode($v, !$this->_object_output);
+            if ($this->_data = json_decode($v, !$this->_object_output))
+			{
+				$mas[$k] = $this->_data;
+			}
+
+            if ($error = $this->lastError())
+            {
+                $this->_throwException($error);
+            }
+			elseif (is_null($this->_data))
+			{
+				$this->_throwException($mas[$k]);
+			}
         }
 
         return $mas;
@@ -583,7 +599,7 @@ class SuperjobAPI
     protected function _buildUrl($url, $params = '')
     {
         return (stripos($url, self::API_URI) === false)
-            ? "https://".self::API_URI.$url.'/'.$params
+            ? 'https://'.self::API_URI.$url.'/'.$params
             : $url.'/'.$params;
     }
 

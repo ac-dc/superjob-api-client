@@ -14,7 +14,7 @@ include_once(dirname(__FILE__).'/../SuperjobAPI.php');
 // ID app
 define("CLIENT_ID", 1); 
 // Secret key
-define("CLIENT_SECRET", "Your secret here");
+define("CLIENT_SECRET", "secret_code_here");
 
 
 try 
