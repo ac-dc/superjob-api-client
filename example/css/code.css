@@ -1,0 +1,32 @@
+.contacts
+{
+	color: #848484; 
+	font-size: 12px; 
+	margin-top: 4px;
+}
+
+.hide {
+	display: none;
+}
+
+.cutted {
+	white-space: nowrap; 
+	overflow: hidden; 
+	text-overflow: ellipsis; 
+	width: 450px;
+}
+
+.error {
+	color: #f00; 
+	font-weight: bold;
+}
+
+.received {
+	background: #eee;
+	padding: 10px;
+}
+
+.bottom {
+	height: 200px; 
+	margin-bottom: 200px;
+}

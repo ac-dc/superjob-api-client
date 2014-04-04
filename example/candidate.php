@@ -10,7 +10,7 @@
 
 header("Content-type: text/html; charset=utf-8");
 
-include_once('SuperjobAPI.php');
+include_once(dirname(__FILE__).'/../SuperjobAPI.php');
 // ID app
 define("CLIENT_ID", 1); 
 // Secret key
