@@ -35,13 +35,26 @@ class SuperjobAPI
     protected $_data;
 
     /**
-     * Instance of SuperjobAPIClient
+     * Instance of SuperjobAPI
      *
-     * @param SuperjobAPIClient $_instance
+     * @param SuperjobAPI $_instance
      */
     static protected $_instance;
 
-
+    /**
+     * {@link setParallelMode()}
+     *
+     * @var bool
+     */	
+	protected $_parallel = false;
+	
+    /**
+     * Parallel storage
+     *
+     * @var array
+     */	
+	protected $_parallel_data = array();
+	
     public function __construct($timeout = 10)
     {
         $this->setTimeout($timeout);
@@ -50,7 +63,7 @@ class SuperjobAPI
     /**
      * Singleton
      *
-     * @return SuperjobAPIClient
+     * @return SuperjobAPI
      */
     static public function instance()
     {
@@ -61,7 +74,7 @@ class SuperjobAPI
         }
         return self::$_instance;
     }
-
+	
     /**
      * Call of Superjob API's catalogues method implementation
      *
@@ -209,7 +222,7 @@ class SuperjobAPI
      */
     public function received_resumes_on_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes/received/'.$id.'/', $params, $access_token, 'GET');
+        return $this->customQuery($app_key.'/resumes/received/'.$id, $params, $access_token, 'GET');
     }
 
     /**
@@ -221,23 +234,22 @@ class SuperjobAPI
      * @param array $params
      * @return array
      */
-    public function resume($id, $app_key, $access_token, $params = array())
+    public function resume($id, $app_key, $params = array(), $access_token = null)
     {
-        return $this->customQuery($app_key.'/resumes/'.$id.'/', $params, $access_token,'GET');
+        return $this->customQuery($app_key.'/resumes/'.$id, $params, $access_token,'GET');
     }
-
 
     /**
      * Call of Superjob API's resumes method implementation
      *
      * @param string $app_key
+     * @param array $params - search parameters
      * @param string $access_token
-     * @param array $params
      * @return array
      */
-    public function resumes($app_key, $access_token, $params = array())
+    public function resumes($app_key, $params = array(), $access_token = null)
     {
-        return $this->customQuery($app_key.'/resumes/', $params, $access_token, 'GET');
+        return $this->customQuery($app_key.'/resumes', $params, $access_token, 'GET');
     }
 
     /**
@@ -250,7 +262,7 @@ class SuperjobAPI
      */
     public function create_resume($app_key, $access_token, $params = array())
     {
-        return $this->customQuery($app_key.'/resumes/', $params, $access_token, 'POST');
+        return $this->customQuery($app_key.'/resumes', $params, $access_token, 'POST');
     }
 
 
@@ -337,7 +349,7 @@ class SuperjobAPI
      * @param int $id - ID of vacancy
      * @param array $data
      * @param string $access_token
-     * @return string
+     * @return array
      */
     public function vacancy($id, $data = array(), $access_token = null)
     {
@@ -351,7 +363,7 @@ class SuperjobAPI
      *
      * @param integer $timeout Length of time (in seconds) before timeout
      *
-     * @return SuperjobAPIClient
+     * @return SuperjobAPI
      */
     public function setTimeout($timeout)
     {
@@ -372,7 +384,30 @@ class SuperjobAPI
     {
         $this->_object_output = true;
     }
+	
+    /**
+     * Sets a parallel mode. It means that all requests will be sent 
+	 * to a server in one request
+     *
+     * @return void
+     */	
+	public function setParallelMode()
+	{
+		$this->_parallel = true;
+	}
+	
+	/**
+	*	Executes a stack of requests
+	**/
+	public function executeParallel()
+	{
+		$this->_parallel = false;
+		$res = $this->parallelResults($this->customQuery('parallel', $this->_parallel_data, null, 'POST', true));
+		$this->_parallel_data = array();
 
+		return $res;
+	}	
+	
     /**
      * Tells was the last request successfull or not
      *
@@ -439,7 +474,7 @@ class SuperjobAPI
      * @param string $name - API Method
      * @param array $data - API Method's parameters
      * @param string $access_token
-     * @return string
+     * @return mixed
      */
     protected function _sendGetRequest($name, $data = array(), $access_token = null)
     {
@@ -459,7 +494,7 @@ class SuperjobAPI
      * @param string $name - API Method
      * @param array $data - API Method's parameters
      * @param string $access_token
-     * @return string
+     * @return mixed
      */
     protected function _sendPostRequest($name, $data = array(), $access_token = null)
     {
@@ -486,6 +521,13 @@ class SuperjobAPI
      */
     protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
     {
+		// parallel mode collects data to be processed in future
+		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
+		{
+			$this->_parallel_data[] = array($url => $data);
+			return;
+		}
+		
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
