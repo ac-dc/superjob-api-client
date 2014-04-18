@@ -334,26 +334,28 @@ class SuperjobAPI
     /**
      * Call of Superjob API's vacancies method implementation
      *
+     * @param string $app_key	 
      * @param array $data
      * @param string $access_token
      * @return array
      */
-    public function vacancies($data = array(), $access_token = null)
+    public function vacancies($app_key, $data = array(), $access_token = null)
     {
-        return $this->_sendGetRequest('vacancies', $data, $access_token);
+        return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies', $data, $access_token);
     }
 
     /**
      * Call of Superjob API's vacancies/:id method implementation
      *
      * @param int $id - ID of vacancy
+     * @param string $app_key	 
      * @param array $data
      * @param string $access_token
      * @return array
      */
-    public function vacancy($id, $data = array(), $access_token = null)
+    public function vacancy($id, $app_key, $data = array(), $access_token = null)
     {
-        return $this->_sendGetRequest('vacancies/'.$id, $data, $access_token);
+        return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies/'.$id, $data, $access_token);
     }
 
     /**
