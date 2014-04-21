@@ -357,6 +357,48 @@ class SuperjobAPI
     {
         return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies/'.$id, $data, $access_token);
     }
+	
+    /**
+     * Create vacancy implementation
+     *
+     * @param string $app_key
+     * @param string $access_token
+     * @param $params
+     * @return array
+     */
+    public function create_vacancy($app_key, $access_token, $params = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'POST');
+    }
+
+
+    /**
+     * Update vacancy implementation
+     *
+     * @param int $id - ID of vacancy
+     * @param string $app_key
+     * @param string $access_token
+     * @param $params - update data
+     * @return array
+     */
+    public function update_vacancy($id, $app_key, $access_token, $params = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'PUT');
+    }
+
+
+    /**
+     * Delete vacancy implementation
+     *
+     * @param int $id - ID of vacancy
+     * @param string $app_key
+     * @param string $access_token
+     * @return void
+     */
+    public function delete_vacancy($id, $app_key, $access_token)
+    {
+        $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', array(), $access_token, 'DELETE');
+    }	
 
     /**
      * Sets the length of time (in seconds) to wait for a response from Superjob before timing out.
