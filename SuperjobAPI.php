@@ -208,7 +208,7 @@ class SuperjobAPI
      */
     public function received_resumes($app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/received/', $params, $access_token, 'GET');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/received', $params, $access_token, 'GET');
     }
 
     /**
@@ -339,8 +339,9 @@ class SuperjobAPI
      * @param string $access_token
      * @return array
      */
-    public function vacancies($app_key, $data = array(), $access_token = null)
+    public function vacancies($app_key, array $data = array(), $access_token = null)
     {
+		assert(is_string($app_key));
         return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies', $data, $access_token);
     }
 
@@ -691,7 +692,7 @@ class SuperjobAPI
     {
         $data = compact('refresh_token', 'client_id', 'client_secret');
 
-        return $this->_sendGetRequest(self::OAUTH_URL.'access_token' , $data);
+        return $this->_sendGetRequest(self::OAUTH_URL.'refresh_token' , $data);
     }
 
     /**
@@ -707,7 +708,6 @@ class SuperjobAPI
     public function fetchAccessToken($code, $redirect_uri, $client_id, $client_secret)
     {
         $data = compact('code', 'redirect_uri', 'client_id', 'client_secret');
-
         return $this->_sendGetRequest(self::OAUTH_URL.'access_token' , $data);
     }
 
@@ -716,10 +716,13 @@ class SuperjobAPI
      *
      * @param int $client_id
      * @param string $return_uri
+	 * @param string $state
      */
-    public function redirectToAuthorizePage($client_id, $return_uri)
+    public function redirectToAuthorizePage($client_id, $return_uri, $state = null)
     {
-        $auth_url = self::OAUTH_AUTHORIZE_URL.'?client_id='.$client_id.'&redirect_uri='.urlencode($return_uri);
+        $auth_url = self::OAUTH_AUTHORIZE_URL.'?client_id='.$client_id.
+			'&redirect_uri='.urlencode($return_uri).
+			(!empty($state) ? '&state='.urlencode($state) : '');
 
         header('Location: '.$auth_url);
         exit;

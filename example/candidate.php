@@ -21,14 +21,14 @@ try
 {
 	$API = new SuperjobAPI(); //можно и так: SuperjobAPI::instance();
 	$clients = $API->clients(array('keyword' => 'Газпром', 'page' => 2, 'count' => 5));
-	$vacancies = $API->vacancies(array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
+	$vacancies = $API->vacancies(CLIENT_SECRET, array('keyword' => 'php', 'town' => 4, 'page' => 1, 'count' => 5));
 	
 	$redirect_uri = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}?access=1#oauth";
 	
 	if (!empty($_REQUEST['contacts']))
 	{
 		$API->redirectToAuthorizePage(CLIENT_ID,
-			$redirect_uri);
+			$redirect_uri, 'custom_data_value');
 	}
 	elseif (!empty($_REQUEST['access']))
 	{
@@ -39,6 +39,7 @@ try
 		$user = $API->current_user($access_token);
 
 		$vacancies_with_contacts = $API->vacancies(
+					CLIENT_SECRET,
 					array(
 						'keyword' => 'php',
 						'count' => 10, 
@@ -80,10 +81,15 @@ catch (SuperjobAPIException $e)
 	}
 ?>
 </table>
+<?
+if (!empty($vacancies))
+{
+?>
 <h2>Список вакансий: vacancies</h2>
 <div class="contacts">Ключевое слово: php; город: Москва; вывод по 5 вакансий; 2-я страница поиска.</div>
 <table cellpadding=4 cellspacing=4>
 <?
+
 	foreach ($vacancies['objects'] as $v)
 	{
 		echo '<tr><td><p>
@@ -94,6 +100,9 @@ catch (SuperjobAPIException $e)
 	}
 ?>
 </table>
+<?
+}
+?>
 <h2 id="oauth">Список вакансий с контактами: vacancies + OAuth</h2>
 <div class="contacts">Ключевое слово: php; город: Н.Новгород, Новосибирск; вывод по 10 вакансий.
 <br><b>Сессия теряется после перезагрузки страницы</b></div>

@@ -48,7 +48,7 @@ try
 		$resumes = $API->resumes(CLIENT_SECRET, array('keyword' => 'менеджер', 'gender' => 3, 'page' => mt_rand(0, 10), 'count' => 5));
 		
 		// Выбираем вакансии авторизованного пользователя
-		$vacancies = $API->vacancies(array('id_user' => $user['id'], 'published' => 1, 'count' => 3), $access_token);
+		$vacancies = $API->vacancies(CLIENT_SECRET, array('id_user' => $user['id'], 'published' => 1, 'count' => 3), $access_token);
 
 		$resumes_with_contacts = $API->resumes(
 					CLIENT_SECRET,
@@ -60,22 +60,24 @@ try
 					$access_token
 				);
 
-		// Выполняем предыдущие 3 запроса параллельно	
-		
+		// Выполняем предыдущие 3 запроса параллельно
 		list($resumes, $vacancies, $resumes_with_contacts) = $API->executeParallel();
 		
-		$API->setParallelMode();
-		
-		foreach ($vacancies['objects'] as $k => $v)
+		if ($vacancies)
 		{
-			$received[$k] = $API->received_resumes_on_vacancy($v['id'], CLIENT_SECRET, $access_token, array('count' => 5));	
-		}
-		
-		$received = $API->executeParallel();
+			$API->setParallelMode();
+			
+			foreach ($vacancies['objects'] as $k => $v)
+			{
+				$received[$k] = $API->received_resumes_on_vacancy($v['id'], CLIENT_SECRET, $access_token, array('count' => 5));	
+			}
+			
+			$received = $API->executeParallel();
 
-		foreach ($vacancies['objects'] as $k => $v)
-		{
-			$vacancies['objects'][$k]['received'] = $received[$k];
+			foreach ($vacancies['objects'] as $k => $v)
+			{
+				$vacancies['objects'][$k]['received'] = $received[$k];
+			}
 		}
 	}
 	else
@@ -158,30 +160,31 @@ if (!empty($user) && !empty($user['hr']))
 </table>
 <?
 	}
+	if ($resumes_with_contacts)
+	{
 ?>
 <table cellpadding=4 cellspacing=4>
 <h2 id="oauth">Список резюме с контактами: /resumes + OAuth</h2>
 <div class="contacts">Город: Санкт-Петербург; ключевое слово: хирург; вывод по 5 резюме.</div>
 <?
-
-	foreach ($resumes_with_contacts['objects'] as $v)
-	{
-		echo '<tr><td>
-			<p class="cutted"><a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a></p>
-			<div class="contacts">'.
-				($v['firstname'].' &#9679; '.$v['phone1'].' &#9679; '.$v['email']).
-			'</div>
-			</td>
-			<td>'.
-			((!empty($v['photo'])) 
-				? '<img src="'.$v['photo'].'" border=0><br>' 
-				: '').'
-			</td></tr>';
+	
+		foreach ($resumes_with_contacts['objects'] as $v)
+		{
+			echo '<tr><td>
+				<p class="cutted"><a href="'.$v['link'].'" target=_blank>'.$v['profession'].'</a></p>
+				<div class="contacts">'.
+					($v['firstname'].' &#9679; '.$v['phone1'].' &#9679; '.$v['email']).
+				'</div>
+				</td>
+				<td>'.
+				((!empty($v['photo'])) 
+					? '<img src="'.$v['photo'].'" border=0><br>' 
+					: '').'
+				</td></tr>';
+		}
+		echo '</table>';
 	}
-	echo '</table>';
 }
-
-
 
 	if (!empty($resumes))
 	{
