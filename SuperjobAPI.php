@@ -47,6 +47,18 @@ class SuperjobAPI
      * @var bool
      */	
 	protected $_parallel = false;
+
+    /**
+     * @var string
+     */
+    protected $_filename;
+
+    /**
+     * {@link setDebugMode()}
+     *
+     * @var bool
+     */
+    protected $_debug = false;
 	
     /**
      * Parallel storage
@@ -154,6 +166,44 @@ class SuperjobAPI
         return $this->_sendGetRequest(($app_key ? rawurlencode($app_key).'/' : '').'user/current', array(), $access_token);
     }
 
+	
+    /**
+     * Call of Superjob API's favorites method implementation
+     *
+     * @param string $access_token
+	 * @param array $data
+     * @return array
+     */
+    public function favorites($access_token, $data = array())
+    {
+        return $this->_sendGetRequest('favorites', $data, $access_token);
+    }
+	
+	
+    /**
+     * Adds the vacancy to the favorites
+     *
+     * @param int $id - Id of vacancy
+	 * @param string $access_token
+     * @return array
+     */
+    public function add_favorite($id, $access_token)
+    {
+        return $this->_sendPostRequest('favorites/'.(int)$id.'/', array(), $access_token);
+    }
+	
+    /**
+     * Deletes the vacancy from the favorites
+     *
+     * @param int $id - ID of the vacancy
+	 * @param string $access_token
+     * @return void
+     */
+    public function delete_favorite($id, $access_token)
+    {
+		$this->customQuery('favorites/'.(int)$id.'/', array(), $access_token, 'DELETE');
+    }	
+	
     /**
      * Call of Superjob API's forgot_password method implementation
      *
@@ -175,6 +225,68 @@ class SuperjobAPI
     {
         return $this->_sendGetRequest('institutes', $data);
     }
+	
+    /**
+     * Call of Superjob API's messages/:id method implementation
+     *
+	 * @param int $id
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function messages_on_resume($id, $access_token, $data = array())
+    {
+        return $this->_sendGetRequest('messages/'.(int)$id.'/', $data, $access_token);
+    }
+	
+    /**
+     * Call of Superjob API's messages method implementation
+     *
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function messages($access_token, $data = array())
+    {
+        return $this->_sendGetRequest('messages', $data, $access_token);
+    }
+
+    /**
+     * Call of Superjob API's messages/list method implementation
+     *
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function messages_list($access_token, $data = array())
+    {
+        return $this->_sendGetRequest('messages/list', $data, $access_token);
+    }
+	
+    /**
+     * Call of Superjob API's messages/history/all method implementation
+     *
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function messages_history($access_token, $data = array())
+    {
+        return $this->_sendGetRequest('messages/history/all', $data, $access_token);
+    }	
+	
+    /**
+     * Call of Superjob API's messages/history/all/:id method implementation
+     *
+	 * @param int $id
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function messages_history_of_resume($id, $access_token, $data = array())
+    {
+        return $this->_sendGetRequest('messages/history/all/'.(int)$id.'/', $data, $access_token);
+    }	
 
     /**
      * Call of Superjob API's towns method implementation
@@ -251,6 +363,35 @@ class SuperjobAPI
     {
         return $this->customQuery(rawurlencode($app_key).'/resumes', $params, $access_token, 'GET');
     }
+	
+    /**
+     * Call of Superjob API's resumes/:id/copy method implementation
+     *
+	 * @param int $id - ID of cv
+     * @param string $app_key
+     * @param array $params - search parameters
+     * @param string $access_token
+     * @return array
+     */
+    public function copy_resume($id, $app_key, $params = array(), $access_token)
+    {
+        return $this->customQuery(rawurlencode($app_key).'/resumes/'.(int)$id.'/copy', $params, $access_token, 'GET');
+    }
+	
+    /**
+     * Call of Superjob API's resumes/:id/upload method implementation
+     *
+	 * @param int $id - ID of cv
+     * @param string $app_key
+     * @param string $file - path to file (can be taken from $_FILES['file_name']['tmp_name'])
+     * @param string $access_token
+     * @return array
+     */
+    public function upload_photo_to_resume($id, $app_key, $file, $access_token)
+    {
+		$this->_filename = $file;
+        return $this->customQuery(rawurlencode($app_key).'/resumes/'.(int)$id.'/upload', array(), $access_token, 'FILE');
+    }	
 
     /**
      * Create cv implementation
@@ -425,6 +566,18 @@ class SuperjobAPI
      *
      * @return void
      */
+    public function setDebugMode()
+    {
+        $this->_debug = true;
+    }
+
+
+    /**
+     * Returns all data as an objects
+     *
+     *
+     * @return void
+     */
     public function setObjectOutput()
     {
         $this->_object_output = true;
@@ -489,11 +642,11 @@ class SuperjobAPI
      * @param string $access_token
      * @param string $method Specifies the HTTP method to be used for this request
      * @param bool $no_processing - Do not put the API's answer through json_decode() function
-     * @return string
+     * @return array
      */
     public function customQuery($name, $data = array(), $access_token = null, $method = 'GET', $no_processing = false)
     {
-        $url = $method === 'GET' ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
+        $url = ($method === 'GET' || $method === 'FILE') ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
 
         $url = (!empty($access_token))
             ? $this->_signRequest($url, $access_token)
@@ -505,6 +658,7 @@ class SuperjobAPI
 	/**
 	*	Parse received parallel data
 	*	@param array $data - received data from /parallel method
+	*	@return array
 	**/
     public function parallelResults($data)
     {
@@ -577,7 +731,7 @@ class SuperjobAPI
      * @param mixed   $data   x-www-form-urlencoded data (or array) to be sent in a POST request body
      * @param bool $no_processing - Do not make json decoding of acquired results
      *
-     * @return array|null
+     * @return array|null|string
      * @throws SuperjobAPIException
      */
     protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
@@ -586,7 +740,7 @@ class SuperjobAPI
 		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
 		{
 			$this->_parallel_data[] = array($url => $data);
-			return;
+			return null;
 		}
 		
         $ch = curl_init();
@@ -603,35 +757,71 @@ class SuperjobAPI
             curl_setopt($ch, CURLOPT_POST, TRUE);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
-        elseif ('GET' !== $method)
+        elseif ('GET' !== $method && 'FILE' !== $method)
         {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         }
 
+        // for /upload method
+		if ($method === 'FILE' && !empty($this->_filename))
+		{
+			if ($fp = fopen($this->_filename, 'r'))
+            {
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+
+                $data = array( );
+                $data['file'] = curl_file_create($this->_filename, mime_content_type($this->_filename), 'file');
+
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            }
+            else
+            {
+                $this->_throwException('Can not load file '.$this->_filename);
+            }
+		}
+
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
 
-        $data = curl_exec($ch);
+        if ($this->_debug)
+        {
+            curl_setopt($ch, CURLOPT_VERBOSE, true);
+            curl_setopt($ch, CURLOPT_FILETIME, true);
+            curl_setopt($ch, CURLOPT_STDERR, $verbose = fopen('php://temp', 'rw+'));
+        }
+
+        $resp = curl_exec($ch);
         $this->_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($data === false)
+        if ($resp === false)
         {
             $this->_throwException(curl_error($ch));
         }
 
         $size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
-        $data = substr($data, $size);
-        if (!empty($data) && ($no_processing === false))
+
+        if ($this->_debug)
         {
-            $data = json_decode($data, !$this->_object_output);
-            $this->_data = $data;
+            echo "Verbose information:\n", !rewind($verbose), stream_get_contents($verbose), "\n";
+            if ($data && is_array($data))
+            {
+                echo CRLF.CRLF.http_build_query($data);
+            }
+        }
+
+        curl_close($ch);
+        $resp = substr($resp, $size);
+        if (!empty($resp) && ($no_processing === false))
+        {
+            $resp = json_decode($resp, !$this->_object_output);
+            $this->_data = $resp;
             // If it is an error - let's there be an exception
             if ($error = $this->lastError())
             {
                 $this->_throwException($error);
             }
         }
-        return $data;
+        return $resp;
     }
 
     /**
@@ -745,4 +935,82 @@ class SuperjobAPI
 }
 
 class SuperjobAPIException extends Exception {}
+
+if (!function_exists('curl_file_create'))
+{
+    function curl_file_create($filename, $mimetype = '', $postname = '')
+    {
+        return "@$filename;filename="
+        . ($postname ?: basename($filename))
+        . ($mimetype ? ";type=$mimetype" : '');
+    }
+}
+
+if (!function_exists('mime_content_type'))
+{
+    function mime_content_type($filename)
+    {
+
+        $mime_types = array(
+            'txt' => 'text/plain',
+            'htm' => 'text/html',
+            'html' => 'text/html',
+            'php' => 'text/html',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'json' => 'application/json',
+            'xml' => 'application/xml',
+            'swf' => 'application/x-shockwave-flash',
+            'flv' => 'video/x-flv',
+            'png' => 'image/png',
+            'jpe' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'jpg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'bmp' => 'image/bmp',
+            'ico' => 'image/vnd.microsoft.icon',
+            'tiff' => 'image/tiff',
+            'tif' => 'image/tiff',
+            'svg' => 'image/svg+xml',
+            'svgz' => 'image/svg+xml',
+            'zip' => 'application/zip',
+            'rar' => 'application/x-rar-compressed',
+            'exe' => 'application/x-msdownload',
+            'msi' => 'application/x-msdownload',
+            'cab' => 'application/vnd.ms-cab-compressed',
+            'mp3' => 'audio/mpeg',
+            'qt' => 'video/quicktime',
+            'mov' => 'video/quicktime',
+            'pdf' => 'application/pdf',
+            'psd' => 'image/vnd.adobe.photoshop',
+            'ai' => 'application/postscript',
+            'eps' => 'application/postscript',
+            'ps' => 'application/postscript',
+            'doc' => 'application/msword',
+            'rtf' => 'application/rtf',
+            'xls' => 'application/vnd.ms-excel',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'odt' => 'application/vnd.oasis.opendocument.text',
+            'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+        );
+
+        $ext = strtolower(array_pop(explode('.',$filename)));
+        if (array_key_exists($ext, $mime_types))
+        {
+            return $mime_types[$ext];
+        }
+        elseif (function_exists('finfo_open'))
+        {
+            $finfo = finfo_open(FILEINFO_MIME);
+            $mimetype = finfo_file($finfo, $filename);
+            finfo_close($finfo);
+            return $mimetype;
+        }
+        else
+        {
+            return 'application/octet-stream';
+        }
+    }
+}
+
 ?>
