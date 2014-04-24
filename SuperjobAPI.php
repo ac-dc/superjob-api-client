@@ -146,11 +146,16 @@ class SuperjobAPI
     /**
      * Call of Superjob API's countries method implementation
      *
-     * @param array $data
+     * @param string $keyword
      * @return array
      */
-    public function countries(array $data = array())
+    public function countries($keyword = '')
     {
+		$data = array();
+		if (!empty($keyword))
+		{
+			$data['keyword'] = $keyword;
+		}
         return $this->_sendGetRequest('countries', $data);
     }
 
@@ -291,22 +296,47 @@ class SuperjobAPI
     /**
      * Call of Superjob API's towns method implementation
      *
-     * @param array $data
+     * @param string $keyword	
+	 * @param bool $all			- show all list of towns (no pages)
+	 * @param bool $genitive	- show additional data
      * @return array
      */
-    public function towns($data = array())
+    public function towns($keyword = '', $all = false, $genitive = false)
     {
+		$data = array();
+		if (!empty($keyword))
+		{
+			$data['keyword'] = $keyword;
+		}
+		if (!empty($all))
+		{
+			$data['all'] = $all;
+		}
+		if (!empty($genitive))
+		{
+			$data['genitive'] = $genitive;
+		}
         return $this->_sendGetRequest('towns', $data);
     }
 
     /**
      * Call of Superjob API's regions method implementation
      *
-     * @param array $data
+     * @param string $keyword	
+	 * @param bool $all			- show all list of regions (no pages)
      * @return array
      */
-    public function regions($data = array())
+    public function regions($keyword = '', $all = false)
     {
+		$data = array();
+		if (!empty($keyword))
+		{
+			$data['keyword'] = $keyword;
+		}
+		if (!empty($all))
+		{
+			$data['all'] = $all;
+		}	
         return $this->_sendGetRequest('regions', $data);
     }
 
@@ -434,17 +464,31 @@ class SuperjobAPI
     {
         $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', array(), $access_token, 'DELETE');
     }
+	
+    /**
+     * Call of Superjob API's user_cvs/update_datepub/:id/ method implementation
+     *
+     * @param int $id - ID of cv
+     * @param string $access_token
+     * @return array
+     */
+    public function update_resume_date_published($id, $access_token)
+    {
+        return $this->_sendPostRequest('user_cvs/update_datepub/'.(int)$id, array(), $access_token);
+    }	
 
     /**
      * Call of Superjob API's send_cv_on_vacancy method implementation
      *
-     * @param array $data
+     * @param int $id_cv		- ID of cv
+	 * @param int $id_vacancy	- ID of vacancy
+	 * @param string $comment	- text message
      * @param string $access_token
      * @return array
      */
-    public function send_cv_on_vacancy($data = array(), $access_token)
+    public function send_cv_on_vacancy($id_cv, $id_vacancy, $comment = '', $access_token)
     {
-        return $this->_sendPostRequest('send_cv_on_vacancy', $data, $access_token);
+        return $this->_sendPostRequest('send_cv_on_vacancy', array('id_cv' => (int)$id_cv, 'id_vacancy' => $id_vacancy, 'comment' => $comment), $access_token);
     }
 
     /**
@@ -802,11 +846,21 @@ class SuperjobAPI
 
         if ($this->_debug)
         {
-            echo "Verbose information:\n", !rewind($verbose), stream_get_contents($verbose), "\n";
+            $s = !rewind($verbose). stream_get_contents($verbose). "\n";
             if ($data && is_array($data))
             {
-                echo CRLF.CRLF.http_build_query($data);
+				$input_data = CRLF.CRLF.http_build_query($data).CRLF;
+				if (stripos($s, '< HTTP/1.1') !== false)
+				{
+					$s = str_replace('< HTTP/1.1', $input_data.'< HTTP/1.1', $s);
+				}
+				else
+				{
+					$s.= $input_data;
+				}
             }
+			
+			echo $s;
         }
 
         curl_close($ch);
