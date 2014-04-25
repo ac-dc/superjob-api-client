@@ -556,7 +556,7 @@ class SuperjobAPI
      */
     public function archive_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive/', $params, $access_token, 'POST');
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive/', $params, $access_token, 'PUT');
     }
 
     /**
