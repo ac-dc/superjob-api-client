@@ -67,6 +67,8 @@ class SuperjobAPI
      */	
 	protected $_parallel_data = array();
 	
+	public $replace_domain = false;
+	
     public function __construct($timeout = 10)
     {
         $this->setTimeout($timeout);
@@ -147,11 +149,11 @@ class SuperjobAPI
      * Call of Superjob API's countries method implementation
      *
      * @param string $keyword
+     * @param array $data
      * @return array
      */
-    public function countries($keyword = '')
+    public function countries($keyword = '', $data = array())
     {
-		$data = array();
 		if (!empty($keyword))
 		{
 			$data['keyword'] = $keyword;
@@ -299,11 +301,11 @@ class SuperjobAPI
      * @param string $keyword	
 	 * @param bool $all			- show all list of towns (no pages)
 	 * @param bool $genitive	- show additional data
+     * @param array $data
      * @return array
      */
-    public function towns($keyword = '', $all = false, $genitive = false)
+    public function towns($keyword = '', $all = false, $genitive = false, $data = array())
     {
-		$data = array();
 		if (!empty($keyword))
 		{
 			$data['keyword'] = $keyword;
@@ -324,11 +326,11 @@ class SuperjobAPI
      *
      * @param string $keyword	
 	 * @param bool $all			- show all list of regions (no pages)
+     * @param array $data
      * @return array
      */
-    public function regions($keyword = '', $all = false)
+    public function regions($keyword = '', $all = false, $data = array())
     {
-		$data = array();
 		if (!empty($keyword))
 		{
 			$data['keyword'] = $keyword;
@@ -543,7 +545,20 @@ class SuperjobAPI
     {
         return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies/'.$id, $data, $access_token);
     }
-	
+
+    /**
+     * vacancies/:id/archive implementation
+     * @param int $id - ID of vacancy
+     * @param string $app_key
+     * @param string $access_token
+     * @param $params
+     * @return array
+     */
+    public function archive_vacancy($id, $app_key, $access_token, $params = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive/', $params, $access_token, 'POST');
+    }
+
     /**
      * Create vacancy implementation
      *
@@ -579,11 +594,12 @@ class SuperjobAPI
      * @param int $id - ID of vacancy
      * @param string $app_key
      * @param string $access_token
+     * @param array $params
      * @return void
      */
-    public function delete_vacancy($id, $app_key, $access_token)
+    public function delete_vacancy($id, $app_key, $access_token, $params = array())
     {
-        $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', array(), $access_token, 'DELETE');
+        $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'DELETE');
     }	
 
     /**
@@ -619,12 +635,12 @@ class SuperjobAPI
     /**
      * Returns all data as an objects
      *
-     *
+     * @param $mode
      * @return void
      */
-    public function setObjectOutput()
+    public function setObjectOutput($mode = true)
     {
-        $this->_object_output = true;
+        $this->_object_output = $mode;
     }
 	
     /**
@@ -669,13 +685,27 @@ class SuperjobAPI
     {
         if ($this->_object_output)
         {
-            return (!empty($this->_data) && !empty($this->_data->error->message))
-                ? $this->_data->error->message
-                : false;
+            if (!empty($this->_data) && !empty($this->_data->error->message))
+            {
+                if (is_scalar($this->_data->error->message))
+                {
+                    return $this->_data->error->message;
+                }
+                $error = current($this->_data->error->message);
+                return $error->description;
+            }
+
         }
-        return (!empty($this->_data) && !empty($this->_data['error']['message']))
-            ? $this->_data['error']['message']
-            : false;
+        elseif((!empty($this->_data) && !empty($this->_data['error']['message'])))
+        {
+            if (is_scalar($this->_data['error']['message']))
+            {
+                return $this->_data['error']['message'];
+            }
+            $error =  current($this->_data['error']['message']);
+            return $error['description'];
+        }
+        return false;
     }
 
     /**
@@ -780,6 +810,8 @@ class SuperjobAPI
      */
     protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
     {
+        if ($this->replace_domain)
+            $url = str_replace('https://api.superjob.ru', 'http://'.$this->replace_domain, $url);
 		// parallel mode collects data to be processed in future
 		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
 		{
@@ -791,7 +823,6 @@ class SuperjobAPI
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt ($ch, CURLOPT_HEADER, true);
@@ -865,15 +896,24 @@ class SuperjobAPI
 
         curl_close($ch);
         $resp = substr($resp, $size);
+
         if (!empty($resp) && ($no_processing === false))
         {
-            $resp = json_decode($resp, !$this->_object_output);
-            $this->_data = $resp;
-            // If it is an error - let's there be an exception
-            if ($error = $this->lastError())
+            if ($response = json_decode($resp, !$this->_object_output))
             {
-                $this->_throwException($error);
-            }
+                $this->_data = $response;
+                // If it is an error - let's there be an exception
+                if ($error = $this->lastError())
+                {
+					$this->_throwException($error);
+				}
+				$resp = $response;
+			}
+			else
+			{
+				$resp = ($this->_debug) ? $resp : false;
+			}
+
         }
         return $resp;
     }
