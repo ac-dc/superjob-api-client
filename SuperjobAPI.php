@@ -556,7 +556,7 @@ class SuperjobAPI
      */
     public function archive_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive/', $params, $access_token, 'PUT');
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive', $params, $access_token, 'PUT');
     }
 
     /**
@@ -726,7 +726,7 @@ class SuperjobAPI
             ? $this->_signRequest($url, $access_token)
             : $url;
 
-        return $this->_sendRequest($url, $method, $method === 'POST' ? $data : '', $no_processing);
+        return $this->_sendRequest($url, $method, $method !== 'GET' ? $data : '', $no_processing);
     }
 
 	/**
@@ -824,12 +824,19 @@ class SuperjobAPI
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt ($ch, CURLOPT_HEADER, true);
 
-        if ('POST' === ($method = strtoupper($method)))
+        if ('GET' !== ($method = strtoupper($method)) && ($method !== 'FILE'))
         {
-            curl_setopt($ch, CURLOPT_POST, TRUE);
+            if ($method === 'POST')
+            {
+                curl_setopt($ch, CURLOPT_POST, TRUE);
+            }
+            else
+            {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            }
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         }
         elseif ('GET' !== $method && 'FILE' !== $method)
@@ -842,8 +849,8 @@ class SuperjobAPI
 		{
 			if ($fp = fopen($this->_filename, 'r'))
             {
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+                curl_setopt($ch, CURLOPT_POST,  1);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
                 $data = array( );
                 $data['file'] = curl_file_create($this->_filename, mime_content_type($this->_filename), 'file');
@@ -866,6 +873,7 @@ class SuperjobAPI
         }
 
         $resp = curl_exec($ch);
+
         $this->_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($resp === false)
@@ -877,10 +885,10 @@ class SuperjobAPI
 
         if ($this->_debug)
         {
-            $s = !rewind($verbose). stream_get_contents($verbose). "\n";
+            $s = !rewind($verbose). stream_get_contents($verbose). "\n". $resp;
             if ($data && is_array($data))
             {
-				$input_data = CRLF.CRLF.http_build_query($data).CRLF;
+				$input_data = CRLF.http_build_query($data).CRLF.CRLF;
 				if (stripos($s, '< HTTP/1.1') !== false)
 				{
 					$s = str_replace('< HTTP/1.1', $input_data.'< HTTP/1.1', $s);
