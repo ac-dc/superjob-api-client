@@ -12,7 +12,7 @@ class SuperjobAPI
      *
      * @var integer
      */
-    protected $_timeout = 15;
+    protected $_timeout = 20;
 
     /**
      * {@link setObjectOutput()}
@@ -599,7 +599,7 @@ class SuperjobAPI
      */
     public function delete_vacancy($id, $app_key, $access_token, $params = array())
     {
-        $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'DELETE');
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'DELETE');
     }	
 
     /**
@@ -874,6 +874,28 @@ class SuperjobAPI
 
         $resp = curl_exec($ch);
 
+        if ($this->_debug)
+        {
+            $s = !rewind($verbose). stream_get_contents($verbose). "\n". $resp;
+            if ($data && is_array($data))
+            {
+                $input_data = CRLF.http_build_query($data).CRLF.CRLF;
+                if (stripos($s, '< HTTP/1.1') !== false)
+                {
+                    $s = str_replace('< HTTP/1.1', $input_data.'< HTTP/1.1', $s);
+                }
+                else
+                {
+                    $s.= $input_data;
+                }
+            }
+            if (curl_error($ch))
+            {
+                $s.= CRLF.curl_error($ch);
+            }
+            echo $s;
+        }
+
         $this->_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($resp === false)
@@ -883,24 +905,7 @@ class SuperjobAPI
 
         $size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
-        if ($this->_debug)
-        {
-            $s = !rewind($verbose). stream_get_contents($verbose). "\n". $resp;
-            if ($data && is_array($data))
-            {
-				$input_data = CRLF.http_build_query($data).CRLF.CRLF;
-				if (stripos($s, '< HTTP/1.1') !== false)
-				{
-					$s = str_replace('< HTTP/1.1', $input_data.'< HTTP/1.1', $s);
-				}
-				else
-				{
-					$s.= $input_data;
-				}
-            }
-			
-			echo $s;
-        }
+
 
         curl_close($ch);
         $resp = substr($resp, $size);
