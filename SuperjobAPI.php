@@ -477,7 +477,21 @@ class SuperjobAPI
     public function update_resume_date_published($id, $access_token)
     {
         return $this->_sendPostRequest('user_cvs/update_datepub/'.(int)$id, array(), $access_token);
-    }	
+    }
+	
+    /**
+     * Call of Superjob API's resumes/:id/views/ method implementation
+     *
+	 * @param int $id - ID of cv
+	 * @param string $app_key
+	 * @param string $access_token
+     * @param array $data
+     * @return array
+     */
+    public function resume_views($id, $app_key, $access_token, $data = array())
+    {
+        return $this->_sendGetRequest(rawurlencode($app_key).'/resumes/'.$id.'/views/', $data, $access_token);
+    }		
 
     /**
      * Call of Superjob API's send_cv_on_vacancy method implementation
