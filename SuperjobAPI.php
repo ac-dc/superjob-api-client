@@ -572,6 +572,19 @@ class SuperjobAPI
     {
         return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive', $params, $access_token, 'PUT');
     }
+	
+    /**
+     * vacancies/:id/republish implementation
+     * @param int $id - ID of vacancy
+     * @param string $app_key
+     * @param string $access_token
+     * @param $params
+     * @return array
+     */
+    public function republish_vacancy($id, $app_key, $access_token, $params = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/republish', $params, $access_token, 'PUT');
+    }	
 
     /**
      * Create vacancy implementation
