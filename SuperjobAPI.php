@@ -460,11 +460,12 @@ class SuperjobAPI
      * @param int $id - ID of cv
      * @param string $app_key
      * @param string $access_token
+     * @param array $params
      * @return void
      */
-    public function delete_resume($id, $app_key, $access_token)
+    public function delete_resume($id, $app_key, $access_token, $params = array())
     {
-        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', array(), $access_token, 'DELETE');
+        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', $params, $access_token, 'DELETE');
     }
 	
     /**
@@ -742,7 +743,7 @@ class SuperjobAPI
      * @param array $data - API Method's parameters
      * @param string $access_token
      * @param string $method Specifies the HTTP method to be used for this request
-     * @param bool $no_processing - Do not put the API's answer through json_decode() function
+     * @param bool $no_processing - Do not put the API answer through json_decode() function
      * @return array
      */
     public function customQuery($name, $data = array(), $access_token = null, $method = 'GET', $no_processing = false)
@@ -906,7 +907,7 @@ class SuperjobAPI
             $s = !rewind($verbose). stream_get_contents($verbose). "\n". $resp;
             if ($data && is_array($data))
             {
-                $input_data = CRLF.http_build_query($data).CRLF.CRLF;
+                $input_data = "\n".http_build_query($data)."\n\n";
                 if (stripos($s, '< HTTP/1.1') !== false)
                 {
                     $s = str_replace('< HTTP/1.1', $input_data.'< HTTP/1.1', $s);
@@ -918,7 +919,7 @@ class SuperjobAPI
             }
             if (curl_error($ch))
             {
-                $s.= CRLF.curl_error($ch);
+                $s.= "\n".curl_error($ch);
             }
             echo $s;
         }
