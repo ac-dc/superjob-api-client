@@ -196,7 +196,7 @@ class SuperjobAPI
      */
     public function add_favorite($id, $access_token)
     {
-        return $this->_sendPostRequest('favorites/'.(int)$id.'/', array(), $access_token);
+        return $this->_sendPostRequest('favorites/'.(int)$id, array(), $access_token);
     }
 	
     /**
@@ -208,7 +208,7 @@ class SuperjobAPI
      */
     public function delete_favorite($id, $access_token)
     {
-		$this->customQuery('favorites/'.(int)$id.'/', array(), $access_token, 'DELETE');
+		$this->customQuery('favorites/'.(int)$id, array(), $access_token, 'DELETE');
     }	
 	
     /**
@@ -243,7 +243,7 @@ class SuperjobAPI
      */
     public function messages_on_resume($id, $access_token, $data = array())
     {
-        return $this->_sendGetRequest('messages/'.(int)$id.'/', $data, $access_token);
+        return $this->_sendGetRequest('messages/'.(int)$id, $data, $access_token);
     }
 	
     /**
@@ -292,7 +292,7 @@ class SuperjobAPI
      */
     public function messages_history_of_resume($id, $access_token, $data = array())
     {
-        return $this->_sendGetRequest('messages/history/all/'.(int)$id.'/', $data, $access_token);
+        return $this->_sendGetRequest('messages/history/all/'.(int)$id, $data, $access_token);
     }	
 
     /**
@@ -450,7 +450,7 @@ class SuperjobAPI
      */
     public function update_resume($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', $params, $access_token, 'PUT');
+        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token, 'PUT');
     }
 
 
@@ -465,7 +465,7 @@ class SuperjobAPI
      */
     public function delete_resume($id, $app_key, $access_token, $params = array())
     {
-        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id.'/', $params, $access_token, 'DELETE');
+        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token, 'DELETE');
     }
 	
     /**
@@ -612,7 +612,7 @@ class SuperjobAPI
      */
     public function update_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'PUT');
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'PUT');
     }
 
 
@@ -627,7 +627,7 @@ class SuperjobAPI
      */
     public function delete_vacancy($id, $app_key, $access_token, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id.'/', $params, $access_token, 'DELETE');
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'DELETE');
     }	
 
     /**
