@@ -293,7 +293,18 @@ class SuperjobAPI
     public function messages_history_of_resume($id, $access_token, $data = array())
     {
         return $this->_sendGetRequest('messages/history/all/'.(int)$id, $data, $access_token);
-    }	
+    }
+	
+    /**
+     * Call of Superjob API's metro/:id_town/lines method implementation
+     *
+	 * @param int $id_town
+     * @return array
+     */
+    public function metro_lines($id_town)
+    {
+        return $this->_sendGetRequest('metro/'.(int)$id_town.'/lines');
+    }		
 
     /**
      * Call of Superjob API's towns method implementation
