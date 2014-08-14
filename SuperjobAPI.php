@@ -2,7 +2,7 @@
 
 class SuperjobAPI
 {
-    const API_URI = 'api.superjob.ru/2.0/';
+    const API_URI = 'https://api.superjob.ru/2.0/';
     const OAUTH_URL = 'https://api.superjob.ru/2.0/oauth2/';
 
     const OAUTH_AUTHORIZE_URL = 'http://www.superjob.ru/authorize';
@@ -584,6 +584,19 @@ class SuperjobAPI
     {
         return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive', $params, $access_token, 'PUT');
     }
+
+    /**
+     * vacancies/archive implementation
+     * @param string $app_key
+     * @param string $access_token
+     * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
+     * @return array
+     */
+    public function archive_vacancies($app_key, $access_token, $vacancies = array())
+    {
+        $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/archive', $params, $access_token, 'PUT');
+    }
 	
     /**
      * vacancies/:id/republish implementation
@@ -596,7 +609,20 @@ class SuperjobAPI
     public function republish_vacancy($id, $app_key, $access_token, $params = array())
     {
         return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/republish', $params, $access_token, 'PUT');
-    }	
+    }
+
+    /**
+     * vacancies/republish implementation
+     * @param string $app_key
+     * @param string $access_token
+     * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
+     * @return array
+     */
+    public function republish_vacancies($app_key, $access_token, $vacancies = array())
+    {
+        $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
+        return $this->customQuery(rawurlencode($app_key).'/vacancies/republish', $params, $access_token, 'PUT');
+    }
 
     /**
      * Create vacancy implementation
@@ -608,6 +634,20 @@ class SuperjobAPI
      */
     public function create_vacancy($app_key, $access_token, $params = array())
     {
+        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'POST');
+    }
+
+    /**
+     * Create vacancies implementation
+     *
+     * @param string $app_key
+     * @param string $access_token
+     * @param array $vacancies - Vacancies to create. Each item of it is vacancy array
+     * @return array
+     */
+    public function create_vacancies($app_key, $access_token, $vacancies = array())
+    {
+        $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
         return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'POST');
     }
 
@@ -626,6 +666,20 @@ class SuperjobAPI
         return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'PUT');
     }
 
+    /**
+     * Update vacancies implementation
+     *
+     * @param string $app_key
+     * @param string $access_token
+     * @param $vacancies  - Vacancies to update. Each item of it is vacancy array
+     * @return array
+     */
+    public function update_vacancies($app_key, $access_token, $vacancies = array())
+    {
+        $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
+        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'PUT');
+    }
+
 
     /**
      * Delete vacancy implementation
@@ -639,7 +693,22 @@ class SuperjobAPI
     public function delete_vacancy($id, $app_key, $access_token, $params = array())
     {
         return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'DELETE');
-    }	
+    }
+
+
+    /**
+     * Delete vacancies implementation
+     *
+     * @param string $app_key
+     * @param string $access_token
+     * @param array $vacancies  - Vacancies to delete. Each item of it is vacancy array
+     * @return array
+     */
+    public function delete_vacancies($app_key, $access_token, $vacancies = array())
+    {
+        $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
+        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'DELETE');
+    }
 
     /**
      * Sets the length of time (in seconds) to wait for a response from Superjob before timing out.
@@ -850,7 +919,7 @@ class SuperjobAPI
     protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
     {
         if ($this->replace_domain)
-            $url = str_replace('https://api.superjob.ru', 'http://'.$this->replace_domain, $url);
+            $url = str_replace('https://api.superjob.ru', $this->replace_domain === 'api.superjob.ru' ? 'https://api.superjob.ru' : 'http://'.$this->replace_domain, $url);
 		// parallel mode collects data to be processed in future
 		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
 		{
@@ -980,7 +1049,7 @@ class SuperjobAPI
     protected function _buildUrl($url, $params = '')
     {
         return (stripos($url, self::API_URI) === false)
-            ? 'https://'.self::API_URI.$url.'/'.$params
+            ? self::API_URI.$url.'/'.$params
             : $url.'/'.$params;
     }
 
