@@ -1085,6 +1085,19 @@ class SuperjobAPI
     }
 
     /**
+	 * Acquires the Access Token using the login and password
+     * @param $login
+     * @param $password
+     * @param $client_id
+     * @param $client_secret
+     * @return mixed
+     */
+    public function getAccessTokenByPassword($login, $password, $client_id, $client_secret)
+    {
+        return $this->_sendGetRequest(self::OAUTH_URL.'password' , compact('login', 'password', 'client_id', 'client_secret'));
+    }
+
+    /**
      * Refreshes the Access Token
      *
      * @param string $refresh_token
