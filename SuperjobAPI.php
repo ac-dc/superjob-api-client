@@ -797,7 +797,7 @@ class SuperjobAPI
             {
                 if (is_scalar($this->_data->error->message))
                 {
-                    return $this->_data->error->message;
+                    return (array)$this->_data->error;
                 }
                 $error = current($this->_data->error->message);
                 return $error->description;
@@ -808,7 +808,7 @@ class SuperjobAPI
         {
             if (is_scalar($this->_data['error']['message']))
             {
-                return $this->_data['error']['message'];
+                return $this->_data['error'];
             }
             $error =  current($this->_data['error']['message']);
             return $error['description'];
@@ -854,7 +854,7 @@ class SuperjobAPI
 
             if ($error = $this->lastError())
             {
-                $this->_throwException($error);
+                $this->_throwException($error['message'], $error['code']);
             }
 			elseif (is_null($this->_data))
 			{
@@ -1026,7 +1026,7 @@ class SuperjobAPI
                 // If it is an error - let's there be an exception
                 if ($error = $this->lastError())
                 {
-					$this->_throwException($error);
+					$this->_throwException($error['message'], $error['code']);
 				}
 				$resp = $response;
 			}
@@ -1079,13 +1079,12 @@ class SuperjobAPI
      *
      * @throws SuperjobAPIException
      */
-    protected static function _throwException($message)
+    protected static function _throwException($message, $code = 500)
     {
-        throw new SuperjobAPIException($message);
+        throw new SuperjobAPIException($message, $code);
     }
 
     /**
-	 * Acquires the Access Token using the login and password
      * @param $login
      * @param $password
      * @param $client_id
