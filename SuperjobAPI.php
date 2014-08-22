@@ -232,6 +232,61 @@ class SuperjobAPI
     {
         return $this->_sendGetRequest('institutes', $data);
     }
+
+    /**
+     * Call of Superjob API's hr/user/:id method implementation
+     * @param $id
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return mixed
+     */
+    public function hr_user($id, $app_key, $access_token, $data = array())
+    {
+        return $this->_sendGetRequest(rawurlencode($app_key).'/hr/user/'.(int)$id, $data, $access_token);
+    }
+
+    /**
+     * Create HR user implementation
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array
+     */
+    public function create_hr_user($app_key, $access_token, $data = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/hr/user', $data, $access_token, 'POST');
+    }
+
+    /**
+     * Update HR user implementation
+     *
+     * @param $id
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array
+     */
+    public function update_hr_user($id, $app_key, $access_token, $data = array())
+    {
+        assert(is_numeric($id));
+        return $this->customQuery(rawurlencode($app_key).'/hr/user/'.$id, $data, $access_token, 'PUT');
+    }
+
+    /**
+     * Delete HR user implementation
+     *
+     * @param $id
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array|void
+     */
+    public function delete_hr_user($id, $app_key, $access_token, $data = array())
+    {
+        assert(is_numeric($id));
+        return $this->customQuery(rawurlencode($app_key).'/hr/user/'.$id, $data, $access_token, 'DELETE');
+    }
 	
     /**
      * Call of Superjob API's messages/:id method implementation
@@ -688,7 +743,7 @@ class SuperjobAPI
      * @param string $app_key
      * @param string $access_token
      * @param array $params
-     * @return void
+     * @return void|mixed
      */
     public function delete_vacancy($id, $app_key, $access_token, $params = array())
     {
@@ -775,7 +830,7 @@ class SuperjobAPI
 	}	
 	
     /**
-     * Tells was the last request successfull or not
+     * Whether the last request was successful or not
      *
      * @return bool
      */
@@ -785,9 +840,9 @@ class SuperjobAPI
     }
 
     /**
-     * Tells wether the last request successfull or not
+     * Returns an error's text description
      *
-     * @return bool
+     * @return bool|mixed
      */
     public function lastError()
     {
@@ -973,6 +1028,7 @@ class SuperjobAPI
 
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
 
+        $verbose = false;
         if ($this->_debug)
         {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
@@ -1074,9 +1130,8 @@ class SuperjobAPI
 
     /**
      * Throws an SuperjobAPIException
-     *
      * @param string $message Message to be provided with the exception
-     *
+     * @param int $code
      * @throws SuperjobAPIException
      */
     protected static function _throwException($message, $code = 500)
