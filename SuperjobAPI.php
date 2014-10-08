@@ -68,6 +68,12 @@ class SuperjobAPI
 	protected $_parallel_data = array();
 	
 	public $replace_domain = false;
+
+    /**
+     * Headers
+     * @var array
+     */
+    protected $_headers = array('Cache-Control:max-age=0');
 	
     public function __construct($timeout = 10)
     {
@@ -784,7 +790,7 @@ class SuperjobAPI
     }
 
     /**
-     * Returns all data as an objects
+     * Debug mode
      *
      *
      * @return void
@@ -792,6 +798,16 @@ class SuperjobAPI
     public function setDebugMode()
     {
         $this->_debug = true;
+    }
+
+	/**
+	*	Adds header to http-request
+	*	@param string $header
+	*	@return void
+	**/
+    public function addHeader($header)
+    {
+        $this->_headers[] = $header;
     }
 
 
@@ -989,6 +1005,7 @@ class SuperjobAPI
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt ($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->_headers);
 
         if ('GET' !== ($method = strtoupper($method)) && ($method !== 'FILE'))
         {
