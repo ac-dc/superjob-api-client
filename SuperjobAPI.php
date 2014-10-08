@@ -394,6 +394,28 @@ class SuperjobAPI
     }
 
     /**
+     * Call of Superjob API's towns/geoip/ method implementation
+     *
+     * @param string $ip
+     * @param bool $genitive	- show additional data
+     * @param array $data
+     * @return array
+     */
+    public function town_by_ip($ip, $genitive = false, $data = array())
+    {
+        $data['ip'] = $ip;
+        if (!empty($all))
+        {
+            $data['all'] = $all;
+        }
+        if (!empty($genitive))
+        {
+            $data['genitive'] = $genitive;
+        }
+        return $this->_sendGetRequest('towns/geoip', $data);
+    }
+
+    /**
      * Call of Superjob API's regions method implementation
      *
      * @param string $keyword	
