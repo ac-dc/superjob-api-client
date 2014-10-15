@@ -951,7 +951,7 @@ class SuperjobAPI
             }
 			elseif (is_null($this->_data))
 			{
-				$this->_throwException($mas[$k]);
+				$this->_throwException('Data was empty or corrupted: "'.$v.'"');
 			}
         }
 
