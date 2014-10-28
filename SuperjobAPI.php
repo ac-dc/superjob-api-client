@@ -1012,14 +1012,22 @@ class SuperjobAPI
     protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
     {
         if ($this->replace_domain)
-            $url = str_replace('https://api.superjob.ru', $this->replace_domain === 'api.superjob.ru' ? 'https://api.superjob.ru' : 'http://'.$this->replace_domain, $url);
+        {
+            $url = str_replace('https://api.superjob.ru',
+                (stripos($this->replace_domain , 'api.superjob.') !== false
+                    ? 'https://'.$this->replace_domain
+                    : 'http://'.$this->replace_domain
+                ), $url
+            );
+        }
+
 		// parallel mode collects data to be processed in future
 		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
 		{
 			$this->_parallel_data[] = array($url => $data);
 			return null;
 		}
-		
+
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
