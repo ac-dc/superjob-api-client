@@ -69,11 +69,12 @@ class SuperjobAPI
 	
 	public $replace_domain = false;
 
+    const DEFAULT_HEADER = 'Cache-Control:max-age=0';
     /**
      * Headers
      * @var array
      */
-    protected $_headers = array('Cache-Control:max-age=0');
+    protected $_headers = array(self::DEFAULT_HEADER);
 	
     public function __construct($timeout = 10)
     {
@@ -237,6 +238,71 @@ class SuperjobAPI
     public function institutes($data = array())
     {
         return $this->_sendGetRequest('institutes', $data);
+    }
+
+    /**
+     * Call of Superjob API's hr/subscriptions/:id method implementation
+     * @param $id
+     * @param $app_key
+     * @param array $params
+     * @param null $access_token
+     * @return array
+     */
+    public function hr_subscription($id, $app_key, $params = array(), $access_token = null)
+    {
+        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.(int)$id, $params, $access_token, 'GET');
+    }
+
+    /**
+     * Call of Superjob API's hr/subscriptions method implementation
+     * @param $app_key
+     * @param array $params
+     * @param null $access_token
+     * @return array
+     */
+    public function hr_subscriptions($app_key, $params = array(), $access_token = null)
+    {
+        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions', $params, $access_token, 'GET');
+    }
+
+    /**
+     * Create HR subscription implementation
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array
+     */
+    public function create_hr_subscription($app_key, $access_token, $data = array())
+    {
+        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions', $data, $access_token, 'POST');
+    }
+
+    /**
+     * Update HR subscription implementation
+     * @param $id
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array
+     */
+    public function update_hr_subscription($id, $app_key, $access_token, $data = array())
+    {
+        assert(is_numeric($id));
+        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.$id, $data, $access_token, 'PUT');
+    }
+
+    /**
+     * Delete HR subscription implementation
+     * @param $id
+     * @param $app_key
+     * @param $access_token
+     * @param array $data
+     * @return array
+     */
+    public function delete_hr_subscription($id, $app_key, $access_token, $data = array())
+    {
+        assert(is_numeric($id));
+        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.$id, $data, $access_token, 'DELETE');
     }
 
     /**
@@ -832,6 +898,32 @@ class SuperjobAPI
         $this->_headers[] = $header;
     }
 
+    /**
+     *	Reset headers to default value
+     *	@return void
+     **/
+    public function resetHeaders()
+    {
+        $this->_headers = array(self::DEFAULT_HEADER);
+    }
+
+
+	/**
+	 * Check if header key already set
+	 * @param string $header_key e.g. 'Cache-Control'
+	 * @return bool
+	 */
+	public function isHeaderSet($header_key)
+	{
+		foreach($this->_headers as $header)
+		{
+			if(mb_strstr($header, $header_key) !== false)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
     /**
      * Returns all data as an objects
@@ -1013,10 +1105,11 @@ class SuperjobAPI
     {
         if ($this->replace_domain)
         {
+            $replace_domain = str_replace(array('https://', 'http://'), '', $this->replace_domain);
             $url = str_replace('https://api.superjob.ru',
                 (stripos($this->replace_domain , 'api.superjob.') !== false
-                    ? 'https://'.$this->replace_domain
-                    : 'http://'.$this->replace_domain
+                    ? 'https://'.$replace_domain
+                    : 'http://'.$replace_domain
                 ), $url
             );
         }
@@ -1123,7 +1216,8 @@ class SuperjobAPI
 
         if (!empty($resp) && ($no_processing === false))
         {
-            if ($response = json_decode($resp, !$this->_object_output))
+            $response = json_decode($resp, !$this->_object_output);
+            if ($response !== NULL)
             {
                 $this->_data = $response;
                 // If it is an error - let's there be an exception
