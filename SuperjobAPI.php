@@ -76,9 +76,12 @@ class SuperjobAPI
      */
     protected $_headers = array(self::DEFAULT_HEADER);
 	
-    public function __construct($timeout = 10)
+    public function __construct($timeout = null)
     {
-        $this->setTimeout($timeout);
+        if ($timeout)
+        {
+            $this->setTimeout($timeout);
+        }
     }
 
     /**
