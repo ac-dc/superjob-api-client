@@ -59,6 +59,8 @@ class SuperjobAPI
      * @var bool
      */
     protected $_debug = false;
+
+    protected $_no_debug_output = false;
 	
     /**
      * Parallel storage
@@ -66,8 +68,20 @@ class SuperjobAPI
      * @var array
      */	
 	protected $_parallel_data = array();
+
+    /**
+     * Режим повторных запросов при засадах
+     * @var bool
+     */
+    protected $_fallback = false;
 	
 	public $replace_domain = false;
+
+    /**
+     * Turn off json-processing
+     * @var bool
+     */
+    protected $_no_processing = false;
 
     const DEFAULT_HEADER = 'Cache-Control:max-age=0';
     /**
@@ -75,12 +89,35 @@ class SuperjobAPI
      * @var array
      */
     protected $_headers = array(self::DEFAULT_HEADER);
+
+    /**
+     * {@link setUserAgent()}
+     * @var bool|string
+     */
+    protected $_user_agent = false;
+
+    protected $_no_exceptions = false;
+	
+    /**
+     * {@link setLocal()}
+     *
+     * @var bool
+     */
+    protected $_local = false;
+
+	protected $_secret_key;
+	protected $_access_token;
 	
     public function __construct($timeout = null)
     {
         if ($timeout)
         {
             $this->setTimeout($timeout);
+        }
+
+        if (!empty($_SERVER['HTTP_USER_AGENT']))
+        {
+            $this->setUserAgent($_SERVER['HTTP_USER_AGENT']);
         }
     }
 
@@ -98,7 +135,36 @@ class SuperjobAPI
         }
         return self::$_instance;
     }
-	
+
+	public function setSecretKey($val)
+	{
+		$this->_secret_key = $val;
+		$this->setSecretKeyHeader();
+	}
+
+	public function setAccessToken($val)
+	{
+		$this->_access_token = $val;
+		$this->setAuthorizationHeader();
+	}
+
+	protected function setAuthorizationHeader()
+	{
+		if (!$this->isHeaderSet('Authorization') && !empty($this->_access_token))
+		{
+			$this->addHeader('Authorization: Bearer '.$this->_access_token);
+		}
+	}
+
+	protected function setSecretKeyHeader()
+	{
+		if (!empty($this->_secret_key))
+		{
+			$this->removeHeader('X-Api-App-Id')->addHeader('X-Api-App-Id: '.$this->_secret_key);
+		}
+	}
+
+
     /**
      * Call of Superjob API's catalogues method implementation
      *
@@ -174,51 +240,47 @@ class SuperjobAPI
     /**
      * Call of Superjob API's user/current method implementation
      *
-     * @param string $access_token
-     * @param string $app_key - Secret key of your app. Used for employer's API
      * @return array
      */
-    public function current_user($access_token, $app_key = null)
+    public function current_user()
     {
-        return $this->_sendGetRequest(($app_key ? rawurlencode($app_key).'/' : '').'user/current', array(), $access_token);
+        return $this->_sendGetRequest('user/current');
     }
 
-	
-    /**
-     * Call of Superjob API's favorites method implementation
-     *
-     * @param string $access_token
+
+	/**
+	 * Call of Superjob API's favorites method implementation
+	 *
 	 * @param array $data
-     * @return array
-     */
-    public function favorites($access_token, $data = array())
+	 * @return mixed
+	 */
+	public function favorites($data = array())
     {
-        return $this->_sendGetRequest('favorites', $data, $access_token);
+        return $this->_sendGetRequest('favorites', $data);
     }
 	
 	
-    /**
-     * Adds the vacancy to the favorites
-     *
-     * @param int $id - Id of vacancy
-	 * @param string $access_token
-     * @return array
-     */
-    public function add_favorite($id, $access_token)
+
+	/**
+	 * Adds the vacancy to the favorites
+	 *
+	 * @param $id - Id of vacancy
+	 * @return array
+	 */
+	public function add_favorite($id)
     {
-        return $this->_sendPostRequest('favorites/'.(int)$id, array(), $access_token);
+        return $this->_sendPostRequest('favorites/'.(int)$id, array());
     }
 	
-    /**
-     * Deletes the vacancy from the favorites
-     *
-     * @param int $id - ID of the vacancy
-	 * @param string $access_token
-     * @return void
-     */
-    public function delete_favorite($id, $access_token)
+
+	/**
+	 * Deletes the vacancy from the favorites
+	 *
+	 * @param $id - ID of the vacancy
+	 */
+	public function delete_favorite($id)
     {
-		$this->customQuery('favorites/'.(int)$id, array(), $access_token, 'DELETE');
+		$this->customQuery('favorites/'.(int)$id, array(), 'DELETE');
     }	
 	
     /**
@@ -243,186 +305,181 @@ class SuperjobAPI
         return $this->_sendGetRequest('institutes', $data);
     }
 
-    /**
-     * Call of Superjob API's hr/subscriptions/:id method implementation
-     * @param $id
-     * @param $app_key
-     * @param array $params
-     * @param null $access_token
-     * @return array
-     */
-    public function hr_subscription($id, $app_key, $params = array(), $access_token = null)
+
+	/**
+	 * Call of Superjob API's hr/subscriptions/:id method implementation
+	 * 
+	 * @param $id
+	 * @param array $params
+	 * @return array
+	 */
+	public function hr_subscription($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.(int)$id, $params, $access_token, 'GET');
+        return $this->customQuery('hr/subscriptions/'.(int)$id, $params, 'GET');
     }
 
-    /**
-     * Call of Superjob API's hr/subscriptions method implementation
-     * @param $app_key
-     * @param array $params
-     * @param null $access_token
-     * @return array
-     */
-    public function hr_subscriptions($app_key, $params = array(), $access_token = null)
+
+	/**
+	 * Call of Superjob API's hr/subscriptions method implementation
+	 * 
+	 * @param array $params
+	 * @return array
+	 */
+	public function hr_subscriptions($params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions', $params, $access_token, 'GET');
+        return $this->customQuery('hr/subscriptions', $params, 'GET');
     }
 
-    /**
-     * Create HR subscription implementation
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array
-     */
-    public function create_hr_subscription($app_key, $access_token, $data = array())
+	/**
+	 * Create HR subscription implementation
+	 * 
+	 * @param array $data
+	 * @return array
+	 */
+	public function create_hr_subscription($data = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions', $data, $access_token, 'POST');
+        return $this->customQuery('hr/subscriptions', $data, 'POST');
     }
 
-    /**
-     * Update HR subscription implementation
-     * @param $id
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array
-     */
-    public function update_hr_subscription($id, $app_key, $access_token, $data = array())
+
+	/**
+	 * Update HR subscription implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return array
+	 */
+	public function update_hr_subscription($id, $data = array())
     {
         assert(is_numeric($id));
-        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.$id, $data, $access_token, 'PUT');
+        return $this->customQuery('hr/subscriptions/'.$id, $data, 'PUT');
     }
 
-    /**
-     * Delete HR subscription implementation
-     * @param $id
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array
-     */
-    public function delete_hr_subscription($id, $app_key, $access_token, $data = array())
+
+	/**
+	 * Delete HR subscription implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return array
+	 */
+	public function delete_hr_subscription($id, $data = array())
     {
         assert(is_numeric($id));
-        return $this->customQuery(rawurlencode($app_key).'/hr/subscriptions/'.$id, $data, $access_token, 'DELETE');
+        return $this->customQuery('hr/subscriptions/'.$id, $data, 'DELETE');
     }
 
-    /**
-     * Call of Superjob API's hr/user/:id method implementation
-     * @param $id
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return mixed
-     */
-    public function hr_user($id, $app_key, $access_token, $data = array())
+
+	/**
+	 * Call of Superjob API's hr/user/:id method implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function hr_user($id, $data = array())
     {
-        return $this->_sendGetRequest(rawurlencode($app_key).'/hr/user/'.(int)$id, $data, $access_token);
+        return $this->_sendGetRequest('hr/user/'.(int)$id, $data);
     }
 
-    /**
-     * Create HR user implementation
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array
-     */
-    public function create_hr_user($app_key, $access_token, $data = array())
+
+	/**
+	 * Create HR user implementation
+	 * 
+	 * @param array $data
+	 * @return array
+	 */
+	public function create_hr_user($data = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/hr/user', $data, $access_token, 'POST');
+        return $this->customQuery('hr/user', $data, 'POST');
     }
 
-    /**
-     * Update HR user implementation
-     *
-     * @param $id
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array
-     */
-    public function update_hr_user($id, $app_key, $access_token, $data = array())
-    {
-        assert(is_numeric($id));
-        return $this->customQuery(rawurlencode($app_key).'/hr/user/'.$id, $data, $access_token, 'PUT');
-    }
 
-    /**
-     * Delete HR user implementation
-     *
-     * @param $id
-     * @param $app_key
-     * @param $access_token
-     * @param array $data
-     * @return array|void
-     */
-    public function delete_hr_user($id, $app_key, $access_token, $data = array())
+	/**
+	 * Update HR user implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return array
+	 */
+	public function update_hr_user($id, $data = array())
     {
         assert(is_numeric($id));
-        return $this->customQuery(rawurlencode($app_key).'/hr/user/'.$id, $data, $access_token, 'DELETE');
+        return $this->customQuery('hr/user/'.$id, $data, 'PUT');
+    }
+
+	/**
+	 * Delete HR user implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return array|void
+	 */
+	public function delete_hr_user($id, $data = array())
+    {
+        assert(is_numeric($id));
+        return $this->customQuery('hr/user/'.$id, $data, 'DELETE');
     }
 	
-    /**
-     * Call of Superjob API's messages/:id method implementation
-     *
-	 * @param int $id
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function messages_on_resume($id, $access_token, $data = array())
+
+	/**
+	 * Call of Superjob API's messages/:id method implementation
+	 * 
+	 * @param $id
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function messages_on_resume($id, $data = array())
     {
-        return $this->_sendGetRequest('messages/'.(int)$id, $data, $access_token);
-    }
-	
-    /**
-     * Call of Superjob API's messages method implementation
-     *
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function messages($access_token, $data = array())
-    {
-        return $this->_sendGetRequest('messages', $data, $access_token);
+        return $this->_sendGetRequest('messages/'.(int)$id, $data);
     }
 
-    /**
-     * Call of Superjob API's messages/list method implementation
-     *
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function messages_list($access_token, $data = array())
+	/**
+	 * Call of Superjob API's messages method implementation
+	 *
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function messages($data = array())
     {
-        return $this->_sendGetRequest('messages/list', $data, $access_token);
+        return $this->_sendGetRequest('messages', $data);
+    }
+
+
+	/**
+	 * Call of Superjob API's messages/list method implementation
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	public function messages_list($data = array())
+    {
+        return $this->_sendGetRequest('messages/list', $data);
     }
 	
-    /**
-     * Call of Superjob API's messages/history/all method implementation
-     *
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function messages_history($access_token, $data = array())
+
+	/**
+	 * Call of Superjob API's messages/history/all method implementation
+	 *
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function messages_history($data = array())
     {
-        return $this->_sendGetRequest('messages/history/all', $data, $access_token);
+        return $this->_sendGetRequest('messages/history/all', $data);
     }	
 	
-    /**
-     * Call of Superjob API's messages/history/all/:id method implementation
-     *
-	 * @param int $id
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function messages_history_of_resume($id, $access_token, $data = array())
+
+	/**
+	 * Call of Superjob API's messages/history/all/:id method implementation
+	 *
+	 * @param $id
+	 * @param array $data
+	 * @return mixed
+	 */
+	public function messages_history_of_resume($id, $data = array())
     {
-        return $this->_sendGetRequest('messages/history/all/'.(int)$id, $data, $access_token);
+        return $this->_sendGetRequest('messages/history/all/'.(int)$id, $data);
     }
 	
     /**
@@ -505,361 +562,334 @@ class SuperjobAPI
         return $this->_sendGetRequest('regions', $data);
     }
 
-    /**
-     * Call of Superjob API's resumes/received/ method implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function received_resumes($app_key, $access_token, $params = array())
+
+	/**
+	 * Call of Superjob API's resumes/received/ method implementation
+	 *
+	 * @param array $params
+	 * @return array
+	 */
+	public function received_resumes($params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/received', $params, $access_token, 'GET');
+        return $this->customQuery('resumes/received', $params, 'GET');
     }
 
-    /**
-     * Call of Superjob API's resumes/received/:id method implementation
-     *
-     * @param int $id - ID of vacancy
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function received_resumes_on_vacancy($id, $app_key, $access_token, $params = array())
+
+	/**
+	 * Call of Superjob API's resumes/received/:id method implementation
+	 *
+	 * @param $id - ID of vacancy
+	 * @param array $params
+	 * @return array
+	 */
+	public function received_resumes_on_vacancy($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/received/'.$id, $params, $access_token, 'GET');
+        return $this->customQuery('resumes/received/'.$id, $params, 'GET');
     }
 
-    /**
-     * Call of Superjob API's resumes/:id method implementation
-     *
-     * @param int $id - ID of cv
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $params
-     * @return array
-     */
-    public function resume($id, $app_key, $params = array(), $access_token = null)
+
+	/**
+	 * Call of Superjob API's resumes/:id method implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param array $params
+	 * @return array
+	 */
+	public function resume($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token,'GET');
+        return $this->customQuery('resumes/'.$id, $params,'GET');
     }
 
     /**
      * Call of Superjob API's resumes method implementation
      *
-     * @param string $app_key
      * @param array $params - search parameters
-     * @param string $access_token
      * @return array
      */
-    public function resumes($app_key, $params = array(), $access_token = null)
+    public function resumes($params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes', $params, $access_token, 'GET');
+        return $this->customQuery('resumes', $params, 'GET');
     }
 	
-    /**
-     * Call of Superjob API's resumes/:id/copy method implementation
-     *
-	 * @param int $id - ID of cv
-     * @param string $app_key
-     * @param array $params - search parameters
-     * @param string $access_token
-     * @return array
-     */
-    public function copy_resume($id, $app_key, $params = array(), $access_token)
+
+	/**
+	 * Call of Superjob API's resumes/:id/copy method implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param array $params - search parameters
+	 * @return array
+	 */
+	public function copy_resume($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/'.(int)$id.'/copy', $params, $access_token, 'GET');
+        return $this->customQuery('resumes/'.(int)$id.'/copy', $params, 'GET');
     }
 	
-    /**
-     * Call of Superjob API's resumes/:id/upload method implementation
-     *
-	 * @param int $id - ID of cv
-     * @param string $app_key
-     * @param string $file - path to file (can be taken from $_FILES['file_name']['tmp_name'])
-     * @param string $access_token
-     * @return array
-     */
-    public function upload_photo_to_resume($id, $app_key, $file, $access_token)
+
+	/**
+	 * Call of Superjob API's resumes/:id/upload method implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param $file - path to file (can be taken from $_FILES['file_name']['tmp_name'])
+	 * @param array $data
+	 * @return array
+	 */
+	public function upload_photo_to_resume($id, $file, $data = array())
     {
 		$this->_filename = $file;
-        return $this->customQuery(rawurlencode($app_key).'/resumes/'.(int)$id.'/upload', array(), $access_token, 'FILE');
+        return $this->customQuery('resumes/'.(int)$id.'/upload', $data, 'FILE');
     }	
 
-    /**
-     * Create cv implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function create_resume($app_key, $access_token, $params = array())
+
+	/**
+	 * Create cv implementation
+	 *
+	 * @param array $params
+	 * @return array
+	 */
+	public function create_resume($params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes', $params, $access_token, 'POST');
+        return $this->customQuery('resumes', $params, 'POST');
     }
 
 
-    /**
-     * Update cv implementation
-     *
-     * @param int $id - ID of cv
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params - update data
-     * @return array
-     */
-    public function update_resume($id, $app_key, $access_token, $params = array())
+
+	/**
+	 * Update cv implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param array $params - update data
+	 * @return array
+	 */
+	public function update_resume($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token, 'PUT');
+        return $this->customQuery('resumes/'.$id, $params, 'PUT');
     }
 
 
-    /**
-     * Delete cv implementation
-     *
-     * @param int $id - ID of cv
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $params
-     * @return void
-     */
-    public function delete_resume($id, $app_key, $access_token, $params = array())
+
+	/**
+	 * Delete cv implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param array $params
+	 * @return void
+	 */
+	public function delete_resume($id, $params = array())
     {
-        $this->customQuery(rawurlencode($app_key).'/resumes/'.$id, $params, $access_token, 'DELETE');
+        $this->customQuery('resumes/'.$id, $params, 'DELETE');
     }
 	
-    /**
-     * Call of Superjob API's user_cvs/update_datepub/:id/ method implementation
-     *
-     * @param int $id - ID of cv
-     * @param string $access_token
-     * @return array
-     */
-    public function update_resume_date_published($id, $access_token)
+
+	/**
+	 * Call of Superjob API's user_cvs/update_datepub/:id/ method implementation
+	 *
+	 * @param $id
+	 * @return array
+	 */
+	public function update_resume_date_published($id)
     {
-        return $this->_sendPostRequest('user_cvs/update_datepub/'.(int)$id, array(), $access_token);
+        return $this->_sendPostRequest('user_cvs/update_datepub/'.(int)$id, array());
     }
 	
-    /**
-     * Call of Superjob API's resumes/:id/views/ method implementation
-     *
-	 * @param int $id - ID of cv
-	 * @param string $app_key
-	 * @param string $access_token
-     * @param array $data
-     * @return array
-     */
-    public function resume_views($id, $app_key, $access_token, $data = array())
+
+	/**
+	 * Call of Superjob API's resumes/:id/views/ method implementation
+	 *
+	 * @param $id - ID of cv
+	 * @param array $data
+	 * @return array
+	 */
+	public function resume_views($id, $data = array())
     {
-        return $this->_sendGetRequest(rawurlencode($app_key).'/resumes/'.$id.'/views/', $data, $access_token);
+        return $this->_sendGetRequest('resumes/'.$id.'/views/', $data);
     }		
 
-    /**
-     * Call of Superjob API's send_cv_on_vacancy method implementation
-     *
-     * @param int $id_cv		- ID of cv
-	 * @param int $id_vacancy	- ID of vacancy
+
+	/**
+	 * Call of Superjob API's send_cv_on_vacancy method implementation
+	 *
+	 * @param $id_cv		    - ID of cv
+	 * @param $id_vacancy	    - ID of vacancy
 	 * @param string $comment	- text message
-     * @param string $access_token
-     * @return array
-     */
-    public function send_cv_on_vacancy($id_cv, $id_vacancy, $comment = '', $access_token)
+	 * @param array $data 		- may contain auth or other tech data
+	 * @return mixed
+	 */
+	public function send_cv_on_vacancy($id_cv, $id_vacancy, $comment = '', $data = array())
     {
-        return $this->_sendPostRequest('send_cv_on_vacancy', array('id_cv' => (int)$id_cv, 'id_vacancy' => $id_vacancy, 'comment' => $comment), $access_token);
+        return $this->_sendPostRequest('send_cv_on_vacancy', array_merge($data, array('id_cv' => (int)$id_cv, 'id_vacancy' => $id_vacancy, 'comment' => $comment)));
     }
 
     /**
      * Call of Superjob API's user_cvs method implementation
      *
-     * @param string $access_token
      * @return array
      */
-    public function user_cvs($access_token)
+    public function user_cvs()
     {
-        return $this->_sendGetRequest('user_cvs', array(), $access_token);
+        return $this->_sendGetRequest('user_cvs', array());
     }
 
 
     /**
      * Call of Superjob API's user/list method implementation
      *
-     * @param string $app_key - Secret key of your app. Used for employer's API
-     * @param string $access_token
-
      * @return array
      */
-    public function user_list($app_key, $access_token)
+    public function user_list()
     {
-        return $this->_sendGetRequest(rawurlencode($app_key).'/user/list', array(), $access_token);
+        return $this->_sendGetRequest('user/list', array());
     }
 
-    /**
-     * Call of Superjob API's vacancies method implementation
-     *
-     * @param string $app_key	 
-     * @param array $data
-     * @param string $access_token
-     * @return array
-     */
-    public function vacancies($app_key, array $data = array(), $access_token = null)
+	/**
+	 * Call of Superjob API's vacancies method implementation
+	 * 
+	 * @param array $data
+	 * @return mixed|array
+	 */
+	public function vacancies(array $data = array())
     {
-		assert(is_string($app_key));
-        return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies', $data, $access_token);
+        return $this->_sendGetRequest('vacancies', $data);
     }
 
-    /**
-     * Call of Superjob API's vacancies/:id method implementation
-     *
-     * @param int $id - ID of vacancy
-     * @param string $app_key	 
-     * @param array $data
-     * @param string $access_token
-     * @return array
-     */
-    public function vacancy($id, $app_key, $data = array(), $access_token = null)
+	/**
+	 * Call of Superjob API's vacancies/:id method implementation
+	 * 
+	 * @param $id - ID of vacancy
+	 * @param array $data
+	 * @return array
+	 */
+	public function vacancy($id, $data = array())
     {
-        return $this->_sendGetRequest(rawurlencode($app_key).'/vacancies/'.$id, $data, $access_token);
+        return $this->_sendGetRequest('vacancies/'.$id, $data);
     }
 
-    /**
-     * vacancies/:id/archive implementation
-     * @param int $id - ID of vacancy
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function archive_vacancy($id, $app_key, $access_token, $params = array())
+	
+	/**
+	 * vacancies/:id/archive implementation
+	 * 
+	 * @param $id - ID of vacancy
+	 * @param array $params
+	 * @return array
+	 */
+	public function archive_vacancy($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/archive', $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies/'.(int)$id.'/archive', $params, 'PUT');
     }
 
-    /**
-     * vacancies/archive implementation
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
-     * @return array
-     */
-    public function archive_vacancies($app_key, $access_token, $vacancies = array())
+
+	/**
+	 * vacancies/archive implementation
+	 * 
+	 * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
+	 * @return array
+	 */
+	public function archive_vacancies($vacancies = array())
     {
         $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/archive', $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies/archive', $params, 'PUT');
     }
 	
-    /**
-     * vacancies/:id/republish implementation
-     * @param int $id - ID of vacancy
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function republish_vacancy($id, $app_key, $access_token, $params = array())
+
+	/**
+	 * vacancies/:id/republish implementation
+	 *
+	 * @param $id - ID of vacancy
+	 * @param array $params
+	 * @return array
+	 */
+	public function republish_vacancy($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.(int)$id.'/republish', $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies/'.(int)$id.'/republish', $params, 'PUT');
     }
 
-    /**
-     * vacancies/republish implementation
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
-     * @return array
-     */
-    public function republish_vacancies($app_key, $access_token, $vacancies = array())
+
+	/**
+	 * vacancies/republish implementation
+	 *
+	 * @param array $vacancies - Vacancies to republish. Each item of it is vacancy array
+	 * @return array
+	 */
+	public function republish_vacancies($vacancies = array())
     {
         $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/republish', $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies/republish', $params, 'PUT');
     }
 
-    /**
-     * Create vacancy implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params
-     * @return array
-     */
-    public function create_vacancy($app_key, $access_token, $params = array())
+
+	/**
+	 * Create vacancy implementation
+	 *
+	 * @param array $params
+	 * @return array
+	 */
+	public function create_vacancy($params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'POST');
+        return $this->customQuery('vacancies', $params, 'POST');
     }
 
-    /**
-     * Create vacancies implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $vacancies - Vacancies to create. Each item of it is vacancy array
-     * @return array
-     */
-    public function create_vacancies($app_key, $access_token, $vacancies = array())
+
+	/**
+	 * Create vacancies implementation
+	 *
+	 * @param array $vacancies - Vacancies to create. Each item of it is vacancy array
+	 * @return array
+	 */
+	public function create_vacancies($vacancies = array())
     {
         $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
-        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'POST');
+        return $this->customQuery('vacancies', $params, 'POST');
     }
 
 
-    /**
-     * Update vacancy implementation
-     *
-     * @param int $id - ID of vacancy
-     * @param string $app_key
-     * @param string $access_token
-     * @param $params - update data
-     * @return array
-     */
-    public function update_vacancy($id, $app_key, $access_token, $params = array())
+	/**
+	 * Update vacancy implementation
+	 *
+	 * @param $id - ID of vacancy
+	 * @param array $params - update data
+	 * @return array
+	 */
+	public function update_vacancy($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies/'.$id, $params, 'PUT');
     }
 
-    /**
-     * Update vacancies implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param $vacancies  - Vacancies to update. Each item of it is vacancy array
-     * @return array
-     */
-    public function update_vacancies($app_key, $access_token, $vacancies = array())
+
+	/**
+	 * Update vacancies implementation
+	 *
+	 * @param array $vacancies  - Vacancies to update. Each item of it is vacancy array
+	 * @return array
+	 */
+	public function update_vacancies($vacancies = array())
     {
         $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
-        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'PUT');
+        return $this->customQuery('vacancies', $params, 'PUT');
     }
 
 
-    /**
-     * Delete vacancy implementation
-     *
-     * @param int $id - ID of vacancy
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $params
-     * @return void|mixed
-     */
-    public function delete_vacancy($id, $app_key, $access_token, $params = array())
+	/**
+	 * Delete vacancy implementation
+	 *
+	 * @param $id - ID of vacancy
+	 * @param array $params
+	 * @return void|mixed
+	 */
+	public function delete_vacancy($id, $params = array())
     {
-        return $this->customQuery(rawurlencode($app_key).'/vacancies/'.$id, $params, $access_token, 'DELETE');
+        return $this->customQuery('vacancies/'.$id, $params, 'DELETE');
     }
 
 
-    /**
-     * Delete vacancies implementation
-     *
-     * @param string $app_key
-     * @param string $access_token
-     * @param array $vacancies  - Vacancies to delete. Each item of it is vacancy array
-     * @return array
-     */
-    public function delete_vacancies($app_key, $access_token, $vacancies = array())
+	/**
+	 * Delete vacancies implementation
+	 *
+	 * @param array $vacancies - Vacancies to delete. Each item of it is vacancy array
+	 * @return array
+	 */
+	public function delete_vacancies($vacancies = array())
     {
         $params = empty($vacancies['vacancies']) ? array('vacancies' => $vacancies) : $vacancies;
-        return $this->customQuery(rawurlencode($app_key).'/vacancies', $params, $access_token, 'DELETE');
+        return $this->customQuery('vacancies', $params, 'DELETE');
     }
 
     /**
@@ -883,12 +913,43 @@ class SuperjobAPI
     /**
      * Debug mode
      *
-     *
+     * @param $debug
      * @return void
      */
-    public function setDebugMode()
+    public function setDebugMode($debug = true)
     {
-        $this->_debug = true;
+        $this->_debug = $debug;
+    }
+
+    public function setNoDebugOutput($val = true)
+    {
+        $this->_no_debug_output = $val;
+    }
+
+    public function setNoExceptions($val = true)
+    {
+        $this->_no_exceptions = $val;
+    }
+
+    /**
+     * Sets UA to be used in request to API
+     * @param string $val
+     */
+    public function setUserAgent($val)
+    {
+        $this->_user_agent = $val;
+    }
+	
+    public function localOn()
+    {
+		$this->_local = true;
+		return $this;
+    }
+
+    public function localOff()
+    {
+		$this->_local = false;
+		return $this;
     }
 
 	/**
@@ -928,6 +989,44 @@ class SuperjobAPI
 		return false;
 	}
 
+	/**
+	 * Removes header
+	 * @param string $header_key
+	 * @return SuperjobAPI
+	 */
+	public function removeHeader($header_key)
+	{
+		foreach($this->_headers as $k => $header)
+		{
+			if(mb_strstr($header, $header_key) !== false)
+			{
+				unset($this->_headers[$k]);
+				break;
+			}
+		}
+		return $this;
+	}
+
+	/**
+	*	Устанавливаем режим fallback
+	* 	@param bool $val
+	*	@return void
+	**/
+    public function setFallback($val)
+    {
+        $this->_fallback = (bool)$val;
+    }
+
+    /**
+     * @param $val
+     * @return SuperjobAPI
+     */
+    public function setProcessing($val)
+    {
+        $this->_no_processing = !(bool)$val;
+        return $this;
+    }
+
     /**
      * Returns all data as an objects
      *
@@ -956,7 +1055,7 @@ class SuperjobAPI
 	public function executeParallel()
 	{
 		$this->_parallel = false;
-		$res = $this->parallelResults($this->customQuery('parallel', $this->_parallel_data, null, 'POST', true));
+		$res = $this->parallelResults($this->customQuery('parallel', $this->_parallel_data, 'POST', true));
 		$this->_parallel_data = array();
 
 		return $res;
@@ -1014,7 +1113,7 @@ class SuperjobAPI
      * @param bool $no_processing - Do not put the API answer through json_decode() function
      * @return array
      */
-    public function customQuery($name, $data = array(), $access_token = null, $method = 'GET', $no_processing = false)
+    public function customQuery($name, $data = array(), $method = 'GET', $no_processing = false)
     {
         $url = ($method === 'GET' || $method === 'FILE') ? $this->_buildUrl($name, $this->_buildQueryString($data)) : $this->_buildUrl($name);
 
@@ -1032,7 +1131,8 @@ class SuperjobAPI
 	**/
     public function parallelResults($data)
     {
-        $mas = explode("\n", $data);
+        $mas = explode("\r\n", $data);
+
         foreach ($mas as $k => $v)
         {
             if ($this->_data = json_decode($v, !$this->_object_output))
@@ -1100,11 +1200,12 @@ class SuperjobAPI
      * @param string  $method Specifies the HTTP method to be used for this request
      * @param mixed   $data   x-www-form-urlencoded data (or array) to be sent in a POST request body
      * @param bool $no_processing - Do not make json decoding of acquired results
+     * @param int $count - Fallback count
      *
      * @return array|null|string
-     * @throws SuperjobAPIException
+     * @throws SuperjobAPIException|UnexpectedValueException
      */
-    protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false)
+    protected function _sendRequest($url, $method = 'GET', $data = '', $no_processing = false, $count = 0)
     {
         if ($this->replace_domain)
         {
@@ -1116,6 +1217,24 @@ class SuperjobAPI
                 ), $url
             );
         }
+		else
+		{
+			$replace_domain = 'api.superjob.ru';
+		}
+		
+		if($this->_local)
+		{
+			$url = str_replace(
+				$replace_domain, '127.0.0.1', str_replace(
+					'https://', 'http://', $url
+				)
+			);
+
+			if(!in_array('Host:'.$replace_domain, $this->_headers))
+			{
+				$this->_headers []= 'Host:'.$replace_domain;
+			}
+		}
 
 		// parallel mode collects data to be processed in future
 		if ($this->_parallel && ($method === 'GET' || $method === 'POST'))
@@ -1126,12 +1245,25 @@ class SuperjobAPI
 
         $ch = curl_init();
 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt ($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+
+	    // Если есть авторизация, а заголовки очистили
+	    $this->setAuthorizationHeader();
+	    $this->setSecretKeyHeader();
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->_headers);
+		//curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+
+        if ($this->_user_agent)
+        {
+            curl_setopt($ch, CURLOPT_USERAGENT, $this->_user_agent);
+        }
 
         if ('GET' !== ($method = strtoupper($method)) && ($method !== 'FILE'))
         {
@@ -1172,7 +1304,7 @@ class SuperjobAPI
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
 
         $verbose = false;
-        if ($this->_debug)
+        if ($this->_debug && !$this->_no_debug_output)
         {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
             curl_setopt($ch, CURLOPT_FILETIME, true);
@@ -1181,7 +1313,7 @@ class SuperjobAPI
 
         $resp = curl_exec($ch);
 
-        if ($this->_debug)
+        if ($this->_debug && !$this->_no_debug_output)
         {
             $s = !rewind($verbose). stream_get_contents($verbose). "\n". $resp;
             if ($data && is_array($data))
@@ -1203,21 +1335,28 @@ class SuperjobAPI
             echo $s;
         }
 
-        $this->_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$curl_info = curl_getinfo($ch);
+        $this->_http_code = $curl_info['http_code'];
 
-        if ($resp === false)
+		if ($curl_info['connect_time'] >= 1)
+		{
+			$this->saveConnectDescription($curl_info['connect_time'], $curl_info['url']);
+		}
+
+        if ($resp === false && $this->_http_code != 200)
         {
+			// В режиме fallback делаем ещё один запрос при ошибке
+            if ($this->_fallback && $count == 0)
+            {
+                sleep(1);
+                return $this->_sendRequest($url, $method, $data, $no_processing, ++$count);
+            }
             $this->_throwException(curl_error($ch));
         }
 
-        $size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-
-
-
         curl_close($ch);
-        $resp = substr($resp, $size);
 
-        if (!empty($resp) && ($no_processing === false))
+        if (!empty($resp) && ($no_processing === false  && $this->_no_processing === false))
         {
             $response = json_decode($resp, !$this->_object_output);
             if ($response !== NULL)
@@ -1232,13 +1371,21 @@ class SuperjobAPI
 			}
 			else
 			{
-				$resp = ($this->_debug) ? $resp : false;
+                // В режиме fallback делаем ещё один запрос при ошибке
+                if ($this->_fallback && $count == 0)
+                {
+                    sleep(1);
+                    return $this->_sendRequest($url, $method, $data, $no_processing, ++$count);
+                }
+
+				return false;
 			}
 
         }
         return $resp;
     }
 
+	
     /**
      * Makes an URL
      *
@@ -1248,9 +1395,16 @@ class SuperjobAPI
      */
     protected function _buildUrl($url, $params = '')
     {
-        return (stripos($url, self::API_URI) === false)
-            ? self::API_URI.$url.'/'.$params
-            : $url.'/'.$params;
+        $res = (stripos($url, self::API_URI) === false) && ((stripos($url, 'http://') === false) && (stripos($url, 'https://') === false))
+            ? self::API_URI.$url
+            : $url;
+
+        if (empty($params))
+        {
+            return $res.((stripos($res, '?') === false) ? '/' : '');
+        }
+
+        return $res.(((stripos($res, '?') === false)) ? '/'.$params : '&'.$params);
     }
 
     /**
@@ -1278,9 +1432,10 @@ class SuperjobAPI
      * @param int $code
      * @throws SuperjobAPIException
      */
-    protected static function _throwException($message, $code = 500)
+    protected function _throwException($message, $code = 500)
     {
-        throw new SuperjobAPIException($message, $code);
+        if (!$this->_no_exceptions)
+            throw new SuperjobAPIException($message, $code);
     }
 
     /**
@@ -1438,5 +1593,3 @@ if (!function_exists('mime_content_type'))
         }
     }
 }
-
-?>

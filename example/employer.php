@@ -3,7 +3,7 @@
 *	Пример работы с Superjob.ru API для работодателя
 	с использованием параллельных запросов
 *
-*	Для того, чтобы работал пример с OAuth, 
+*	Для того, чтобы заработал этот пример, 
 *	поправьте константы CLIENT_ID и CLIENT_SECRET
 **/
 
@@ -11,13 +11,14 @@ header("Content-type: text/html; charset=utf-8");
 
 include_once(dirname(__FILE__).'/../SuperjobAPI.php');
 // ID app
-define("CLIENT_ID", 1); 
+define("CLIENT_ID", 233); 
 // Secret key
-define("CLIENT_SECRET", "secret_code_here");
+define("CLIENT_SECRET", "your_secret_here");
 
 try 
 {
 	$API = new SuperjobAPI();
+	$API->setSecretKey(CLIENT_SECRET);
 	$redirect_uri = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}?access=1#oauth";
 	
 	// Если хотим посмотреть резюме с контактами - нужно авторизоваться
@@ -39,39 +40,39 @@ try
 	elseif(!empty($_REQUEST['access_token']))
 	{
 		$access_token = $_REQUEST['access_token'];
+		$API->setAccessToken($access_token);
+		
 		// Под кем зашёл пользователь?
-		$user = $API->current_user($access_token);
+		$user = $API->current_user();
 		
 		// Выполняем запросы в параллельном режиме
 		$API->setParallelMode();
 		
-		$resumes = $API->resumes(CLIENT_SECRET, array('keyword' => 'менеджер', 'gender' => 3, 'page' => mt_rand(0, 10), 'count' => 5));
+		$resumes = $API->resumes(array('keyword' => 'менеджер', 'gender' => 3, 'page' => mt_rand(0, 10), 'count' => 5));
 		
 		// Выбираем вакансии авторизованного пользователя
-		$vacancies = $API->vacancies(CLIENT_SECRET, array('id_user' => $user['id'], 'published' => 1, 'count' => 3), $access_token);
+		$vacancies = $API->vacancies(array('id_user' => $user['id'], 'published' => 1, 'count' => 3));
 
 		$resumes_with_contacts = $API->resumes(
-					CLIENT_SECRET,
 					array(
 						'keyword' => 'хирург',
 						'town' => 14,
 						'count' => 5, 
-					), 
-					$access_token
+					)
 				);
 
 		// Выполняем предыдущие 3 запроса параллельно
 		list($resumes, $vacancies, $resumes_with_contacts) = $API->executeParallel();
-		
-		if ($vacancies)
+
+		if (!empty($vacancies) && !empty($vacancies['total']))
 		{
 			$API->setParallelMode();
 			
 			foreach ($vacancies['objects'] as $k => $v)
 			{
-				$received[$k] = $API->received_resumes_on_vacancy($v['id'], CLIENT_SECRET, $access_token, array('count' => 5));	
+				$API->received_resumes_on_vacancy($v['id'], array('count' => 5));	
 			}
-			
+
 			$received = $API->executeParallel();
 
 			foreach ($vacancies['objects'] as $k => $v)
@@ -82,7 +83,7 @@ try
 	}
 	else
 	{
-		$resumes = $API->resumes(CLIENT_SECRET, array('keyword' => 'менеджер', 'gender' => 3, 'page' => mt_rand(0, 10), 'count' => 5));
+		$resumes = $API->resumes(array('keyword' => 'менеджер', 'gender' => 3, 'page' => mt_rand(0, 10), 'count' => 5));
 	}
 }
 catch (SuperjobAPIException $e)
