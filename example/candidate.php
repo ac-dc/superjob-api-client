@@ -72,14 +72,15 @@ catch (SuperjobAPIException $e)
 <div class="contacts">Ключевое слово: Газпром; вывод по 5 компаний; 3-я страница поиска.</div>
 <table cellpadding=4 cellspacing=4>
 <?
-	foreach ($clients['objects'] as $v)
-	{
-		echo '<tr><td><p>
-			<a href="'.$v['link'].'" target=_blank>'.$v['title'].'</a>
-			</p></td><td>'.
-			((!empty($v['client_logo'])) ? '<img src="'.$v['client_logo'].'" border=0><br>' : '').
-			'</td></tr>';
-	}
+	if (!empty($clients['objects']))
+		foreach ($clients['objects'] as $v)
+		{
+			echo '<tr><td><p>
+				<a href="'.$v['link'].'" target=_blank>'.$v['title'].'</a>
+				</p></td><td>'.
+				((!empty($v['client_logo'])) ? '<img src="'.$v['client_logo'].'" border=0><br>' : '').
+				'</td></tr>';
+		}
 ?>
 </table>
 <?
