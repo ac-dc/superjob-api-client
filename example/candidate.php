@@ -12,9 +12,9 @@ header("Content-type: text/html; charset=utf-8");
 
 include_once(dirname(__FILE__).'/../SuperjobAPI.php');
 // ID app
-define("CLIENT_ID", 233); 
+define("CLIENT_ID", 1); 
 // Secret key
-define("CLIENT_SECRET", "secret_code_here");
+define("CLIENT_SECRET", "change_your_secret_code_here");
 
 
 try 

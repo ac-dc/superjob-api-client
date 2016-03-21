@@ -709,7 +709,7 @@ class SuperjobAPI
      */
     public function resume_views($id, $data = array())
     {
-        return $this->_sendGetRequest('resumes/'.$id.'/views/', $data);
+        return $this->_sendGetRequest('resumes/'.$id.'/views', $data);
     }
 
 
